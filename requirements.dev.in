@@ -1,0 +1,10 @@
+# Compile this file with:
+#   pip-compile --output-file=requirements.dev.txt requirements.dev.in
+#
+# Then install with
+#   pip install -r requirements.dev.txt
+
+black
+ipykernel
+mypy
+pip-tools
