@@ -7,4 +7,5 @@
 matplotlib
 nbdev
 numpy
+pandas
 torch
