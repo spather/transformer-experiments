@@ -102,7 +102,9 @@ six==1.16.0
 stack-data==0.6.2
     # via ipython
 sympy==1.12
-    # via torch
+    # via
+    #   -r requirements.in
+    #   torch
 torch==2.0.1
     # via -r requirements.in
 traitlets==5.9.0
