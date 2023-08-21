@@ -4,9 +4,11 @@
 # Then install with
 #   pip install -r requirements.txt
 
+ipywidgets
 matplotlib
 nbdev
 numpy
 pandas
 sympy
 torch
+tqdm
