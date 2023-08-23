@@ -14,6 +14,10 @@ astunparse==1.6.3
     # via nbdev
 backcall==0.2.0
     # via ipython
+certifi==2023.7.22
+    # via requests
+charset-normalizer==3.2.0
+    # via requests
 comm==0.1.4
     # via ipywidgets
 contourpy==1.1.0
@@ -37,6 +41,8 @@ fonttools==4.40.0
     # via matplotlib
 ghapi==1.0.4
     # via nbdev
+idna==3.4
+    # via requests
 ipython==8.14.0
     # via
     #   execnb
@@ -102,6 +108,8 @@ pytz==2023.3
     # via pandas
 pyyaml==6.0
     # via nbdev
+requests==2.31.0
+    # via -r requirements.in
 six==1.16.0
     # via
     #   asttokens
@@ -127,6 +135,8 @@ typing-extensions==4.7.1
     # via torch
 tzdata==2023.3
     # via pandas
+urllib3==2.0.4
+    # via requests
 watchdog==3.0.0
     # via nbdev
 wcwidth==0.2.6

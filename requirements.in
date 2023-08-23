@@ -9,6 +9,7 @@ matplotlib
 nbdev
 numpy
 pandas
+requests
 sympy
 torch
 tqdm
