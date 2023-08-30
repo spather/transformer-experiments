@@ -43,16 +43,25 @@ ghapi==1.0.4
     # via nbdev
 idna==3.4
     # via requests
+ipympl==0.9.3
+    # via -r requirements.in
 ipython==8.14.0
     # via
     #   execnb
+    #   ipympl
     #   ipywidgets
+ipython-genutils==0.2.0
+    # via ipympl
 ipywidgets==8.1.0
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   ipympl
 jedi==0.18.2
     # via ipython
 jinja2==3.1.2
     # via torch
+joblib==1.3.2
+    # via scikit-learn
 jupyterlab-widgets==3.0.8
     # via ipywidgets
 kiwisolver==1.4.4
@@ -60,7 +69,9 @@ kiwisolver==1.4.4
 markupsafe==2.1.3
     # via jinja2
 matplotlib==3.7.2
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   ipympl
 matplotlib-inline==0.1.6
     # via ipython
 mpmath==1.3.0
@@ -73,8 +84,11 @@ numpy==1.25.0
     # via
     #   -r requirements.in
     #   contourpy
+    #   ipympl
     #   matplotlib
     #   pandas
+    #   scikit-learn
+    #   scipy
 packaging==23.1
     # via
     #   fastcore
@@ -89,7 +103,9 @@ pexpect==4.8.0
 pickleshare==0.7.5
     # via ipython
 pillow==10.0.0
-    # via matplotlib
+    # via
+    #   ipympl
+    #   matplotlib
 prompt-toolkit==3.0.39
     # via ipython
 ptyprocess==0.7.0
@@ -110,6 +126,10 @@ pyyaml==6.0
     # via nbdev
 requests==2.31.0
     # via -r requirements.in
+scikit-learn==1.3.0
+    # via -r requirements.in
+scipy==1.11.2
+    # via scikit-learn
 six==1.16.0
     # via
     #   asttokens
@@ -121,6 +141,8 @@ sympy==1.12
     # via
     #   -r requirements.in
     #   torch
+threadpoolctl==3.2.0
+    # via scikit-learn
 torch==2.0.1
     # via -r requirements.in
 tqdm==4.66.1
@@ -128,6 +150,7 @@ tqdm==4.66.1
 traitlets==5.9.0
     # via
     #   comm
+    #   ipympl
     #   ipython
     #   ipywidgets
     #   matplotlib-inline
