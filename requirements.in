@@ -12,6 +12,7 @@ numpy
 pandas
 requests
 scikit-learn
+seaborn
 sympy
 torch
 tqdm
