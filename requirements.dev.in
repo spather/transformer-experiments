@@ -9,3 +9,4 @@ ipykernel
 line_profiler
 mypy
 pip-tools
+types-requests

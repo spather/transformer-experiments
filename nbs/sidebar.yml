@@ -1,0 +1,19 @@
+website:
+  sidebar:
+    contents:
+      - index.ipynb
+      - section: datasets
+        contents:
+          - datasets/tinyshakespeare.ipynb
+      - section: models
+        contents:
+          - models/transformer.ipynb
+      - section: tokenizers
+        contents:
+          - tokenizers/char-tokenizer.ipynb
+      - section: trained_models
+        contents:
+          - trained_models/tinyshakespeare-transformer.ipynb
+      - section: writeups
+        contents:
+          - writeups/00_introduction.ipynb

@@ -1,0 +1,9 @@
+project:
+  output-dir: _docs
+
+website:
+  title: "transformer-experiments"
+  site-url: "https://spather.github.io/transformer-experiments"
+  description: "Some experiments on transformer models"
+  repo-branch: master
+  repo-url: "https://github.com/spather/transformer-experiments"
