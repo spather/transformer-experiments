@@ -8,4 +8,8 @@ jobs:
       - uses: actions/checkout@v3
         with:
           lfs: true
-      - uses: ./.github/actions/my-nbdev-ci
+      # Replace the step below with fastai/workflows/nbdev-ci@master
+      # if https://github.com/fastai/workflows/pull/75 is ever merged
+      - uses: spather/fastai-workflows/nbdev-ci@skip-checkout
+        with:
+          skip_checkout: 'true'
