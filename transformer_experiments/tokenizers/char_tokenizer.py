@@ -3,10 +3,10 @@
 # %% auto 0
 __all__ = ['SToI', 'IToS', 'EncodeFn', 'DecodeFn', 'create_character_tokenizer']
 
-# %% ../../nbs/tokenizers/char-tokenizer.ipynb 4
+# %% ../../nbs/tokenizers/char-tokenizer.ipynb 5
 from typing import Callable, Dict, Iterable, Tuple
 
-# %% ../../nbs/tokenizers/char-tokenizer.ipynb 5
+# %% ../../nbs/tokenizers/char-tokenizer.ipynb 6
 SToI = Dict[str, int]
 IToS = Dict[int, str]
 EncodeFn = Callable[[str], Iterable[int]]

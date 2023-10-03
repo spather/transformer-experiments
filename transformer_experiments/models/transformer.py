@@ -4,13 +4,13 @@
 __all__ = ['batch_size', 'block_size', 'device', 'eval_interval', 'eval_iters', 'n_embed', 'max_iters', 'learning_rate', 'n_head',
            'n_layer', 'dropout', 'Head', 'MultiHeadAttention', 'FeedForward', 'Block', 'TransformerLanguageModel']
 
-# %% ../../nbs/models/transformer.ipynb 4
+# %% ../../nbs/models/transformer.ipynb 5
 from fastcore.test import *
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
 
-# %% ../../nbs/models/transformer.ipynb 5
+# %% ../../nbs/models/transformer.ipynb 6
 batch_size = 64  # how many independent sequences will we process in parallel?
 block_size = 256  # what is the maximum context length for predictions?
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -25,7 +25,7 @@ n_head = 6
 n_layer = 6
 dropout = 0.2
 
-# %% ../../nbs/models/transformer.ipynb 6
+# %% ../../nbs/models/transformer.ipynb 7
 class Head(nn.Module):
     """One self-attention head"""
 
@@ -52,7 +52,7 @@ class Head(nn.Module):
         out = wei @ v
         return out
 
-# %% ../../nbs/models/transformer.ipynb 7
+# %% ../../nbs/models/transformer.ipynb 8
 class MultiHeadAttention(nn.Module):
     """Multiple heads of self attention in parallel"""
 
@@ -67,7 +67,7 @@ class MultiHeadAttention(nn.Module):
         out = self.dropout(self.proj(out))
         return out
 
-# %% ../../nbs/models/transformer.ipynb 8
+# %% ../../nbs/models/transformer.ipynb 9
 class FeedForward(nn.Module):
     """The feed-forward network at the end of a block"""
 
@@ -83,7 +83,7 @@ class FeedForward(nn.Module):
     def forward(self, x):
         return self.net(x)
 
-# %% ../../nbs/models/transformer.ipynb 9
+# %% ../../nbs/models/transformer.ipynb 10
 class Block(nn.Module):
     """One transformer block"""
 
@@ -101,7 +101,7 @@ class Block(nn.Module):
 
         return x
 
-# %% ../../nbs/models/transformer.ipynb 10
+# %% ../../nbs/models/transformer.ipynb 11
 class TransformerLanguageModel(nn.Module):
     """The full transformer language model, tying all the pieces together."""
 
