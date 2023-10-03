@@ -31,5 +31,5 @@ Run the following to ensure all dependencies are generated from
 notebooks and notebooks are cleaned:
 
 ``` bash
-nbdev_export && mypy transformer_experiments/ && nbdev_test && nbdev_clean && nbdev_readme
+make all
 ```
