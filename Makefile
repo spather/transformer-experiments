@@ -21,3 +21,14 @@ clean_old:
 
 readme:
 	nbdev_readme
+
+# Get the root directory of the project (the directory where this Makefile lives)
+ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+
+# Define the library dir relative to the root dir. This is so that it's always
+# correct even if this makefile somehow got invoked from another directory.
+LIB_DIR:=$(ROOT_DIR)/transformer_experiments
+
+clean_lib_dir:
+	@echo Cleaning $(LIB_DIR)
+	rm -rf $(LIB_DIR)
