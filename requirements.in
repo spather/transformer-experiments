@@ -4,6 +4,7 @@
 # Then install with
 #   pip install -r requirements.txt
 
+click
 ipywidgets
 ipympl
 matplotlib

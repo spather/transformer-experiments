@@ -18,6 +18,8 @@ certifi==2023.7.22
     # via requests
 charset-normalizer==3.2.0
     # via requests
+click==8.1.7
+    # via -r requirements.in
 comm==0.1.4
     # via ipywidgets
 contourpy==1.1.0
