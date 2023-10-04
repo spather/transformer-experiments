@@ -2,11 +2,19 @@ website:
   sidebar:
     contents:
       - index.ipynb
+      - section: common
+        contents:
+          - common/databatcher.ipynb
+          - common/utils.ipynb
       - section: datasets
         contents:
           - datasets/tinyshakespeare.ipynb
+      - section: experiments
+        contents:
+          - experiments/block-internals.ipynb
       - section: models
         contents:
+          - models/transformer-helpers.ipynb
           - models/transformer.ipynb
       - section: tokenizers
         contents:
@@ -14,6 +22,10 @@ website:
       - section: trained_models
         contents:
           - trained_models/tinyshakespeare-transformer.ipynb
+      - section: training
+        contents:
+          - training/dataset-split.ipynb
       - section: writeups
         contents:
           - writeups/00_introduction.ipynb
+          - writeups/10_clustering_block_intermediates.ipynb
