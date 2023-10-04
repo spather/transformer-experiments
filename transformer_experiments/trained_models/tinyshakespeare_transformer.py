@@ -13,32 +13,24 @@ import torch
 from transformer_experiments.datasets.tinyshakespeare import (
     TinyShakespeareDataSet,
 )
-from ..models.transformer import device, TransformerLanguageModel
+from ..models.transformer import TransformerLanguageModel
 from transformer_experiments.tokenizers.char_tokenizer import (
-    create_character_tokenizer,
-    SToI,
-    IToS,
-    DecodeFn,
-    EncodeFn,
+    CharacterTokenizer,
 )
 
 # %% ../../nbs/trained_models/tinyshakespeare-transformer.ipynb 7
 def create_model_and_tokenizer(
-    saved_model_filename: str, dataset: TinyShakespeareDataSet
-) -> Tuple[
-    TransformerLanguageModel, str, Iterable[str], int, SToI, IToS, EncodeFn, DecodeFn
-]:
+    saved_model_filename: str, dataset: TinyShakespeareDataSet, device: str
+) -> Tuple[TransformerLanguageModel, CharacterTokenizer]:
     """Instantiates a pre-trained TinyShakespeare model: creates transformer model,
     loads the model params from a saved file, and creates a tokenizer from the dataset's text.
     """
 
     # Create a tokenizer from the dataset's text
-    chars, vocab_size, stoi, itos, encode, decode = create_character_tokenizer(
-        dataset.text
-    )
+    tokenizer = CharacterTokenizer(dataset.text)
 
     # Create the model
-    m = TransformerLanguageModel(vocab_size=vocab_size)
+    m = TransformerLanguageModel(vocab_size=tokenizer.vocab_size, device=device)
     m.to(device)
 
     # Load the model params from a saved file
@@ -47,4 +39,4 @@ def create_model_and_tokenizer(
     )
     m.eval()
 
-    return m, device, chars, vocab_size, stoi, itos, encode, decode
+    return m, tokenizer
