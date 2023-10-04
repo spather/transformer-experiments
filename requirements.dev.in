@@ -10,3 +10,4 @@ line_profiler
 mypy
 pip-tools
 types-requests
+types-tqdm

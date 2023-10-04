@@ -109,6 +109,8 @@ traitlets==5.9.0
     #   matplotlib-inline
 types-requests==2.31.0.7
     # via -r requirements.dev.in
+types-tqdm==4.66.0.2
+    # via -r requirements.dev.in
 typing-extensions==4.7.1
     # via mypy
 urllib3==2.0.6
