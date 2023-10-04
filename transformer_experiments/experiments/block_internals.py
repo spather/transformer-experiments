@@ -16,7 +16,7 @@ import torch
 from tqdm.auto import tqdm
 
 # %% ../../nbs/experiments/block-internals.ipynb 7
-from ..common import DataBatcher
+from ..common.databatcher import DataBatcher
 from ..dataset_split import split_text_dataset
 from transformer_experiments.datasets.tinyshakespeare import (
     TinyShakespeareDataSet,
