@@ -3,14 +3,13 @@
 # %% auto 0
 __all__ = ['DataBatcher']
 
-# %% ../../nbs/common/databatcher.ipynb 4
+# %% ../../nbs/common/databatcher.ipynb 5
 import math
 
-# %% ../../nbs/common/databatcher.ipynb 5
-from fastcore.test import *
+# %% ../../nbs/common/databatcher.ipynb 6
 import torch
 
-# %% ../../nbs/common/databatcher.ipynb 6
+# %% ../../nbs/common/databatcher.ipynb 7
 class DataBatcher:
     """Iterable that will break a long data tensor into batches of samples."""
 

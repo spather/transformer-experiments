@@ -1,4 +1,4 @@
-all: prepare clean_old mypy
+all: prepare no_fastcore_import_in_lib clean_old mypy
 
 export_lib:
 	nbdev_export
@@ -32,3 +32,14 @@ LIB_DIR:=$(ROOT_DIR)/transformer_experiments
 clean_lib_dir:
 	@echo Cleaning $(LIB_DIR)
 	rm -rf $(LIB_DIR)
+
+# Check that 'fastcore.test' is not imported in the library. It should
+# only be imported in the notebooks.
+no_fastcore_import_in_lib:
+	@echo "Checking for fastcore imports in $(LIB_DIR)"
+	@output=$$(find $(LIB_DIR) -name '*.py' -exec grep -nH 'from fastcore.test import' {} \;) ;\
+	if [ "$$output" ]; then \
+		echo "Detected unwanted imports of fastcore.test in library:" ;\
+		echo "$$output" ;\
+		exit 1 ;\
+	fi

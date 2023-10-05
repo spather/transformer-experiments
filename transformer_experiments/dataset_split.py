@@ -3,19 +3,18 @@
 # %% auto 0
 __all__ = ['split_text_dataset']
 
-# %% ../nbs/training/dataset-split.ipynb 3
+# %% ../nbs/training/dataset-split.ipynb 4
 from typing import Tuple
 
-# %% ../nbs/training/dataset-split.ipynb 4
-from fastcore.test import *
+# %% ../nbs/training/dataset-split.ipynb 5
 import torch
 
-# %% ../nbs/training/dataset-split.ipynb 5
+# %% ../nbs/training/dataset-split.ipynb 6
 from transformer_experiments.tokenizers.char_tokenizer import (
     CharacterTokenizer,
 )
 
-# %% ../nbs/training/dataset-split.ipynb 6
+# %% ../nbs/training/dataset-split.ipynb 7
 def split_text_dataset(
     text: str, tokenizer: CharacterTokenizer, train_pct: float
 ) -> Tuple[torch.Tensor, torch.Tensor]:

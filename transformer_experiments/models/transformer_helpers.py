@@ -3,15 +3,14 @@
 # %% auto 0
 __all__ = ['EncodingHelpers', 'InputOutputAccessor', 'TransformerAccessors']
 
-# %% ../../nbs/models/transformer-helpers.ipynb 4
+# %% ../../nbs/models/transformer-helpers.ipynb 5
 from dataclasses import dataclass
 from typing import Dict, Iterable, Tuple
 
-# %% ../../nbs/models/transformer-helpers.ipynb 5
-from fastcore.test import *
+# %% ../../nbs/models/transformer-helpers.ipynb 6
 import torch
 
-# %% ../../nbs/models/transformer-helpers.ipynb 6
+# %% ../../nbs/models/transformer-helpers.ipynb 7
 from transformer_experiments.models.transformer import (
     block_size,
     Block,
@@ -21,7 +20,7 @@ from transformer_experiments.models.transformer import (
 )
 from ..tokenizers.char_tokenizer import CharacterTokenizer
 
-# %% ../../nbs/models/transformer-helpers.ipynb 10
+# %% ../../nbs/models/transformer-helpers.ipynb 11
 class EncodingHelpers:
     def __init__(
         self, m: TransformerLanguageModel, tokenizer: CharacterTokenizer, device: str
@@ -64,7 +63,7 @@ class EncodingHelpers:
         x = token_emb + pos_emb
         return x.detach()
 
-# %% ../../nbs/models/transformer-helpers.ipynb 13
+# %% ../../nbs/models/transformer-helpers.ipynb 14
 class InputOutputAccessor:
     def __init__(self, activations: Dict[str, Tuple]):
         self.activations = activations
@@ -80,7 +79,7 @@ class InputOutputAccessor:
     def output(self, name: str) -> torch.Tensor:
         return self.activations[name][1]
 
-# %% ../../nbs/models/transformer-helpers.ipynb 14
+# %% ../../nbs/models/transformer-helpers.ipynb 15
 class TransformerAccessors:
     """Class that provides methods for running pieces of a `TransformerLanguageModel`
     in isolation and introspecting their intermediate results."""
