@@ -73,14 +73,14 @@ class SubstringFrequencyAnalysis:
         print("Top Tokens for each substring:")
         for s, tokens in self.top_tokens.items():
             print(
-                f"{repr(s)}: {', '.join([f'{repr(token)} ({freq:>3})' for token, freq in tokens])}"
+                f"{repr(s):>{2*self.s_len+2}}: {', '.join([f'{repr(token):>4} ({freq:>4})' for token, freq in tokens])}"
             )
 
         print("Cumulative Top Tokens:")
         print(
             ", ".join(
                 [
-                    f"{repr(token)} ({freq:.2f})"
+                    f"{repr(token):>4} ({freq:.2f})"
                     for token, freq in self.top_tokens_cumulative
                 ]
             )
