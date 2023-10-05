@@ -1,4 +1,4 @@
-all: prepare no_fastcore_import_in_lib clean_old mypy
+all: prepare no_fastcore_import_in_lib clean_old clean_templates mypy
 
 export_lib:
 	nbdev_export
@@ -18,6 +18,9 @@ clean:
 
 clean_old:
 	find nbs/_old -name '_*.ipynb' -exec nbdev_clean --fname {} \;
+
+clean_templates:
+	find nbs/_templates -name '_*.ipynb' -exec nbdev_clean --fname {} \;
 
 readme:
 	nbdev_readme
