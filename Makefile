@@ -1,3 +1,6 @@
+.PHONY: all export_lib prepare mypy test clean clean_old clean_templates \
+	readme clean_lib_dir no_fastcore_import_in_lib
+
 all: prepare no_fastcore_import_in_lib clean_old clean_templates mypy
 
 export_lib:
