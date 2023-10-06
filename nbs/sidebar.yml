@@ -5,6 +5,7 @@ website:
       - section: common
         contents:
           - common/databatcher.ipynb
+          - common/text-analysis.ipynb
           - common/utils.ipynb
       - section: datasets
         contents:
@@ -12,6 +13,7 @@ website:
       - section: experiments
         contents:
           - experiments/block-internals.ipynb
+          - experiments/logit-lens.ipynb
       - section: models
         contents:
           - models/transformer-helpers.ipynb
