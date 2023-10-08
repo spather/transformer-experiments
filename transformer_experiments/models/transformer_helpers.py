@@ -47,12 +47,6 @@ class EncodingHelpers:
         """Given a tensor of tokens, returns a string representing the tokens."""
         return self.tokenizer.decode(tokens.tolist())
 
-    def embed_string(self, s: str) -> torch.Tensor:
-        """Given a string, performs the token and positional embeddings
-        done at the beginning of the model and returns the tensor that
-        would be sent into the stack of blocks."""
-        return self.embed_tokens(self.tokenize_string(s))
-
     def embed_tokens(self, tokens: torch.Tensor) -> torch.Tensor:
         """Given a tensor of tokens containing a batch of tokens (shape B, T),
         performs the token and positional embeddings done at the beginning of
