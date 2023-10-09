@@ -98,7 +98,7 @@ class TransformerAccessors:
         self.device = device
 
     def embed_tokens(self, tokens: torch.Tensor) -> torch.Tensor:
-        """Given a tensor of tokens containing a batch of tokens (shape B, T),
+        """Given a tensor containing a batch of tokens (shape B, T),
         performs the token and positional embeddings done at the beginning of
         the model and returns the tensor that would be sent into the stack of
         blocks."""
