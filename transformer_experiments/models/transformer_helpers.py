@@ -47,7 +47,7 @@ class EncodingHelpers:
         """Given a tensor of tokens, returns a string representing the tokens."""
         return self.tokenizer.decode(tokens.tolist())
 
-# %% ../../nbs/models/transformer-helpers.ipynb 13
+# %% ../../nbs/models/transformer-helpers.ipynb 14
 def unsqueeze_emb(
     emb: torch.Tensor, expected_last_dim_size: int = n_embed
 ) -> torch.Tensor:
@@ -71,7 +71,7 @@ def unsqueeze_emb(
 
     return emb  # ndim == 3, nothing to change
 
-# %% ../../nbs/models/transformer-helpers.ipynb 16
+# %% ../../nbs/models/transformer-helpers.ipynb 17
 class InputOutputAccessor:
     def __init__(self, activations: Dict[str, Tuple]):
         self.activations = activations
@@ -87,7 +87,7 @@ class InputOutputAccessor:
     def output(self, name: str) -> torch.Tensor:
         return self.activations[name][1]
 
-# %% ../../nbs/models/transformer-helpers.ipynb 17
+# %% ../../nbs/models/transformer-helpers.ipynb 18
 class TransformerAccessors:
     """Class that provides methods for running pieces of a `TransformerLanguageModel`
     in isolation and introspecting their intermediate results."""
@@ -190,7 +190,7 @@ class TransformerAccessors:
 
         return logits.detach(), io_accessors
 
-# %% ../../nbs/models/transformer-helpers.ipynb 23
+# %% ../../nbs/models/transformer-helpers.ipynb 24
 class LogitsWrapper:
     """A wrapper class around a tensor of logits that provides
     convenience methods for interpreting and visualizing them."""
