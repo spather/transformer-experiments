@@ -47,22 +47,6 @@ class EncodingHelpers:
         """Given a tensor of tokens, returns a string representing the tokens."""
         return self.tokenizer.decode(tokens.tolist())
 
-    def embed_tokens(self, tokens: torch.Tensor) -> torch.Tensor:
-        """Given a tensor of tokens containing a batch of tokens (shape B, T),
-        performs the token and positional embeddings done at the beginning of
-        the model and returns the tensor that would be sent into the stack of
-        blocks."""
-        idx = tokens[:, -block_size:]
-
-        # Logic from the model's forward() function
-        B, T = idx.shape
-        token_emb = self.m.token_embedding_table(idx)
-        pos_emb = self.m.position_embedding_table(
-            torch.arange(T, device=self.device)
-        )  # (T, n_embed)
-        x = token_emb + pos_emb
-        return x.detach()
-
     def unsqueeze_emb(
         self, emb: torch.Tensor, expected_last_dim_size: int = n_embed
     ) -> torch.Tensor:
@@ -107,8 +91,25 @@ class TransformerAccessors:
     """Class that provides methods for running pieces of a `TransformerLanguageModel`
     in isolation and introspecting their intermediate results."""
 
-    def __init__(self, m: TransformerLanguageModel):
+    def __init__(self, m: TransformerLanguageModel, device: str):
         self.m = m
+        self.device = device
+
+    def embed_tokens(self, tokens: torch.Tensor) -> torch.Tensor:
+        """Given a tensor of tokens containing a batch of tokens (shape B, T),
+        performs the token and positional embeddings done at the beginning of
+        the model and returns the tensor that would be sent into the stack of
+        blocks."""
+        idx = tokens[:, -block_size:]
+
+        # Logic from the model's forward() function
+        B, T = idx.shape
+        token_emb = self.m.token_embedding_table(idx)
+        pos_emb = self.m.position_embedding_table(
+            torch.arange(T, device=self.device)
+        )  # (T, n_embed)
+        x = token_emb + pos_emb
+        return x.detach()
 
     def copy_block_from_model(self, block_idx: int):
         """Given the index of a block in the model [0, n_layer), creates
@@ -188,7 +189,7 @@ class TransformerAccessors:
 
         return logits.detach(), io_accessors
 
-# %% ../../nbs/models/transformer-helpers.ipynb 21
+# %% ../../nbs/models/transformer-helpers.ipynb 22
 class LogitsWrapper:
     """A wrapper class around a tensor of logits that provides
     convenience methods for interpreting and visualizing them."""

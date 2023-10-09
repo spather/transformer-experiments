@@ -43,7 +43,7 @@ class LogitLens:
         assert len(prompt) == len(correct), "prompt and correct must be the same length"
 
         prompt_tokens = eh.tokenize_string(prompt)
-        x = eh.embed_tokens(prompt_tokens)
+        x = accessors.embed_tokens(prompt_tokens)
         _, io_accessors = accessors.run_model(x)
 
         self.embeddings = [x]  # List of embeddings starts with the input

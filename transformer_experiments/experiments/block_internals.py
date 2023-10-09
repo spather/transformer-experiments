@@ -78,7 +78,7 @@ class BlockInternalsExperiment:
 
     def run(self, data_batcher: DataBatcher):
         for batch_idx, batch in tqdm(enumerate(data_batcher)):
-            x = self.eh.embed_tokens(batch)
+            x = self.accessors.embed_tokens(batch)
 
             # Run the encoded batch through the blocks up to the one we're interested in
             for i in range(self.block_idx):
@@ -189,7 +189,7 @@ def run(
     _, val_data = split_text_dataset(ts.text, tokenizer, train_pct=0.9)
 
     encoding_helpers = EncodingHelpers(m, tokenizer, device)
-    accessors = TransformerAccessors(m)
+    accessors = TransformerAccessors(m, device)
 
     # Create the experiment
     exp = BlockInternalsExperiment(
