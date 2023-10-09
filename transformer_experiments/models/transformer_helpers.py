@@ -28,10 +28,7 @@ from ..tokenizers.char_tokenizer import CharacterTokenizer
 
 # %% ../../nbs/models/transformer-helpers.ipynb 11
 class EncodingHelpers:
-    def __init__(
-        self, m: TransformerLanguageModel, tokenizer: CharacterTokenizer, device: str
-    ):
-        self.m = m
+    def __init__(self, tokenizer: CharacterTokenizer, device: str):
         self.tokenizer = tokenizer
         self.device = device
 

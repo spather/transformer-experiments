@@ -188,7 +188,7 @@ def run(
     )
     _, val_data = split_text_dataset(ts.text, tokenizer, train_pct=0.9)
 
-    encoding_helpers = EncodingHelpers(m, tokenizer, device)
+    encoding_helpers = EncodingHelpers(tokenizer, device)
     accessors = TransformerAccessors(m, device)
 
     # Create the experiment
