@@ -28,6 +28,10 @@ from ..tokenizers.char_tokenizer import CharacterTokenizer
 
 # %% ../../nbs/models/transformer-helpers.ipynb 11
 class EncodingHelpers:
+    """Helper class that wraps a tokenizer and provides methods for encoding
+    and decoding strings. The tokenizer just deals with regular Python types
+    whereas this class deals with PyTorch tensors."""
+
     def __init__(self, tokenizer: CharacterTokenizer, device: str):
         self.tokenizer = tokenizer
         self.device = device
