@@ -4,7 +4,7 @@
 __all__ = ['T', 'aggregate_by_string_key', 'DataWrapper']
 
 # %% ../../nbs/common/utils.ipynb 4
-from typing import Callable, Dict, Generic, Iterable, TypeVar
+from typing import Callable, Dict, Generic, Iterable, Sequence, TypeVar
 
 # %% ../../nbs/common/utils.ipynb 5
 T = TypeVar("T")  # Generic type that will be used in many places
@@ -22,7 +22,7 @@ def aggregate_by_string_key(
 class DataWrapper(Generic[T]):
     def __init__(
         self,
-        data: Iterable[T],
+        data: Sequence[T],
         format_item_fn: Callable[[T], str] = repr,
     ):
         self.data = data
@@ -33,6 +33,9 @@ class DataWrapper(Generic[T]):
 
     def __str__(self):
         return ", ".join([self.format_item_fn(d) for d in self.data])
+
+    def __getitem__(self, i):
+        return self.data[i]
 
     def print(self):
         for d in self.data:
