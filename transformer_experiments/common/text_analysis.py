@@ -52,11 +52,15 @@ class SubstringFrequencyAnalysis:
                 next_char = text[i + self.s_len]
                 self.freq_map[s][self.stoi[next_char]] += 1
 
-        # Compute the normalized cumulative frequencies
-        self.cumulative_freqs = torch.zeros(self.vocab_size, dtype=torch.float32)
+        # Compute the cumulative frequencies
+        self.cumulative_freqs = torch.zeros(self.vocab_size, dtype=torch.long)
         for freqs in self.freq_map.values():
-            self.cumulative_freqs += freqs.float()
-        self.cumulative_freqs /= self.cumulative_freqs.sum()
+            self.cumulative_freqs += freqs
+
+        # Normalize the cumulative frequencies
+        self.norm_cumulative_freqs = (
+            self.cumulative_freqs.float() / self.cumulative_freqs.sum()
+        )
 
         # Figure out the top tokens for each substring
         self.top_tokens = {
@@ -64,7 +68,7 @@ class SubstringFrequencyAnalysis:
             for s, freqs in self.freq_map.items()
         }
         self.top_tokens_cumulative = top_nonzero_tokens(
-            self.cumulative_freqs, self.itos
+            self.norm_cumulative_freqs, self.itos
         )
 
     def print_summary(self):
