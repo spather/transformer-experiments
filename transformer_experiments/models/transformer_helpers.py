@@ -40,8 +40,17 @@ class EncodingHelpers:
         """Given a string, returns a tensor representing the tokenized string.
         The returned tensor has shape (1, T) where T is the number of tokens,
         so it works in situations that expect a batch dimension."""
+        return self.tokenize_strings([s])
+
+    def tokenize_strings(self, strings: Sequence[str]) -> torch.Tensor:
+        """Given a sequence of strings, returns a tensor representing the
+        tokenized strings. The returned tensor has shape (N, T) where N is the
+        number of strings and T is the number of tokens, so it works in
+        situations that expect a batch dimension."""
         return torch.tensor(
-            [self.tokenizer.encode(s)], dtype=torch.long, device=self.device
+            [self.tokenizer.encode(s) for s in strings],
+            dtype=torch.long,
+            device=self.device,
         )
 
     def stringify_tokens(self, tokens: torch.Tensor) -> str:
