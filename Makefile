@@ -49,3 +49,42 @@ no_fastcore_import_in_lib:
 		echo "$$output" ;\
 		exit 1 ;\
 	fi
+
+# Data Sets
+
+# ====== Block Internals ======
+BLOCK_INTERNALS_DATA_DIR:=$(ROOT_DIR)/nbs/artifacts/block_internals_results/large_files
+
+# -- Sample Length 3 --
+BLOCK_INTERNALS_SLEN3_DIR:=$(BLOCK_INTERNALS_DATA_DIR)/slen3
+BLOCK_INTERNALS_SLEN3_SENTINEL:=$(BLOCK_INTERNALS_SLEN3_DIR)/__data_generated
+
+$(BLOCK_INTERNALS_SLEN3_SENTINEL):
+	@echo "Generating block internals slen3 data set"
+	@mkdir -p $(BLOCK_INTERNALS_SLEN3_DIR)
+	block_internals_exp_run \
+		$(ROOT_DIR)/nbs/artifacts/shakespeare.pt \
+		$(ROOT_DIR)/nbs/artifacts/input.txt \
+		$(BLOCK_INTERNALS_SLEN3_DIR) \
+		--sample_len 3 \
+		--max_batch_size 10000
+	@touch $(BLOCK_INTERNALS_SLEN3_SENTINEL)
+
+block_internals_slen3_dataset: $(BLOCK_INTERNALS_SLEN3_SENTINEL)
+
+# -- Sample Length 10 --
+BLOCK_INTERNALS_SLEN10_DIR:=$(BLOCK_INTERNALS_DATA_DIR)/slen10
+BLOCK_INTERNALS_SLEN10_SENTINEL:=$(BLOCK_INTERNALS_SLEN10_DIR)/__data_generated
+
+$(BLOCK_INTERNALS_SLEN10_SENTINEL):
+	@echo "Generating block internals slen10 data set"
+	@mkdir -p $(BLOCK_INTERNALS_SLEN10_DIR)
+	block_internals_exp_run \
+		$(ROOT_DIR)/nbs/artifacts/shakespeare.pt \
+		$(ROOT_DIR)/nbs/artifacts/input.txt \
+		$(BLOCK_INTERNALS_SLEN10_DIR) \
+		--sample_len 10 \
+		--max_batch_size 10000
+	@touch $(BLOCK_INTERNALS_SLEN10_SENTINEL)
+
+block_internals_slen10_dataset: $(BLOCK_INTERNALS_SLEN10_SENTINEL)
