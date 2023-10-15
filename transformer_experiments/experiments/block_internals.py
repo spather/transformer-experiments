@@ -163,7 +163,7 @@ def topk_across_batches(
 
     Returns:
     --------
-        A tuple of (indices, values) where indices is a list of indices into
+        A tuple of (values, indices) where indices is a list of indices into
         the overall dataset i.e. across all batches.
     """
     all_topk_values = []
