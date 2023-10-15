@@ -311,18 +311,45 @@ class BatchedBlockInternalsExperiment:
         """Returns the index of the specified string."""
         return self.idx_map[s]
 
+    def _strings_from_indices(
+        self, n_queries: int, indices: torch.Tensor
+    ) -> List[List[str]]:
+        # We're going to return a list of lists of strings, where each
+        # inner list contains the strings that were closest to the query
+        # at the corresponding index.
+        strings: List[List[str]] = [[] for _ in range(n_queries)]
+
+        # Each row n in indices contains the indices of the nth closest
+        # strings to each query. Look up the strings and append them to
+        # each list
+        for ind in indices:
+            for i, idx in enumerate(ind):
+                strings[i].append(self.strings[idx])
+
+        return strings
+
     def strings_with_topk_closest_embeddings(
         self,
-        query: torch.Tensor,
+        queries: torch.Tensor,
         k: int,
         largest: bool = True,
-    ) -> Tuple[Sequence[str], torch.Tensor]:
+    ) -> Tuple[Sequence[Sequence[str]], torch.Tensor]:
         """Returns the top k strings with the closest embeddings
         to the specified query."""
 
+        n_queries, _, _ = queries.shape
+
         def _process_batch(batch: torch.Tensor) -> torch.Tensor:
             B, _, _ = batch.shape
-            return batch_distances(batch.reshape(B, -1), query=query.reshape(-1))
+            return torch.norm(
+                # Reshape the batch to combine all the T dimensions into one, then
+                # expand it to match the number of queries. We can then subtract
+                # the queries (also reshaped to combine the T dimensions into one)
+                # from the batch in one operation.
+                batch.reshape(B, 1, -1).expand(-1, n_queries, -1)
+                - queries.reshape(n_queries, -1),
+                dim=2,
+            )
 
         values, indices = topk_across_batches(
             n_batches=self.n_batches,
@@ -332,7 +359,8 @@ class BatchedBlockInternalsExperiment:
             load_batch=lambda i: torch.load(self._embeddings_filename(i)),
             process_batch=_process_batch,
         )
-        return [self.strings[i] for i in indices], values
+
+        return self._strings_from_indices(n_queries, indices), values
 
     def strings_with_topk_closest_proj_outputs(
         self,
