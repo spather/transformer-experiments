@@ -225,6 +225,27 @@ def batch_distances(batch: torch.Tensor, query: torch.Tensor) -> torch.Tensor:
     return distances
 
 # %% ../../nbs/experiments/block-internals.ipynb 17
+def multi_batch_distances(batch: torch.Tensor, queries: torch.Tensor) -> torch.Tensor:
+    """Returns the distance between each item in the batch and the queries."""
+    assert batch.dim() == 2, f"batch.dim() should be 2, was {batch.dim()}"
+    assert queries.dim() == 2, f"query.dim() should be 2, was {queries.dim()}"
+    assert (
+        batch.shape[-1] == queries.shape[-1]
+    ), f"last dimension of batch was {batch.shape[-1]}, which does not match last dimension of queries {queries.shape[-1]}"
+
+    B, _ = batch.shape
+    n_queries, _ = queries.shape
+
+    distances = torch.norm(
+        # Reshape the batch to a singleton dimension, then expand that dimension
+        # by the number of queries. We can then subtract all the queries in one
+        # go.
+        batch.reshape(B, 1, -1).expand(-1, n_queries, -1) - queries,
+        dim=2,
+    )
+    return distances
+
+# %% ../../nbs/experiments/block-internals.ipynb 18
 class BatchedBlockInternalsExperiment:
     """Similar to BlockInternalsExperiment but rather than running
     all strings as one batch through the model, this one runs them
@@ -366,21 +387,24 @@ class BatchedBlockInternalsExperiment:
         self,
         block_idx: int,
         t_i: int,
-        query: torch.Tensor,
+        queries: torch.Tensor,
         k: int,
         largest: bool = True,
-    ) -> Tuple[Sequence[str], torch.Tensor]:
+    ) -> Tuple[Sequence[Sequence[str]], torch.Tensor]:
         """Returns the top k strings with the closest proj outputs
         to the specified query."""
+        n_queries, _ = queries.shape
         values, indices = topk_across_batches(
             n_batches=self.n_batches,
             batch_size=self.batch_size,
             k=k,
             largest=largest,
             load_batch=lambda i: torch.load(self._proj_output_filename(i, block_idx)),
-            process_batch=lambda batch: batch_distances(batch[:, t_i, :], query=query),
+            process_batch=lambda batch: multi_batch_distances(
+                batch[:, t_i, :], queries=queries
+            ),
         )
-        return [self.strings[i] for i in indices], values
+        return self._strings_from_indices(n_queries, indices), values
 
     def strings_with_topk_closest_ffwd_outputs(
         self,
@@ -402,7 +426,7 @@ class BatchedBlockInternalsExperiment:
         )
         return [self.strings[i] for i in indices], values
 
-# %% ../../nbs/experiments/block-internals.ipynb 18
+# %% ../../nbs/experiments/block-internals.ipynb 19
 @click.command()
 @click.argument("model_weights_filename", type=click.Path(exists=True))
 @click.argument("dataset_cache_filename", type=click.Path(exists=True))
@@ -457,7 +481,7 @@ def run(
 
     exp.run()
 
-# %% ../../nbs/experiments/block-internals.ipynb 19
+# %% ../../nbs/experiments/block-internals.ipynb 20
 class BlockInternalsAnalysis:
     """This class performs analysis of how the next token probabilities change
     as an embedded input is passed through each of the blocks in the model"""
