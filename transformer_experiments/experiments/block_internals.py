@@ -142,7 +142,9 @@ def topk_across_batches(
     load_batch: Callable[[int], torch.Tensor],
     process_batch: Callable[[torch.Tensor], torch.Tensor],
 ) -> Tuple[torch.Tensor, Iterable[int]]:
-    """Like torch.topk, but works across multiple batches of data.
+    """Like torch.topk, but works across multiple batches of data. Always
+    works over the batch dimension, which is assumed to be the first dimension
+    of each batch.
 
     Parameters:
     -----------
@@ -157,9 +159,9 @@ def topk_across_batches(
     load_batch:
         A function that takes a batch index and returns a batch of data.
     process_batch:
-        A function that takes a batch of data and returns a 1-D tensor of
-        values, with the same number of items as the batch. The function will
-        return the top k of these values.
+        A function that takes a batch of data and returns a tensor of
+        values, with the same first dimension size as the batch. The function
+        will return the top k of these values along the batch dimension.
 
     Returns:
     --------
@@ -180,7 +182,7 @@ def topk_across_batches(
             results.shape[0] == batch.shape[0]
         ), f"Batch had {batch.shape[0]} items, but results had {results.shape[0]} items."
 
-        topk_values, topk_indices = torch.topk(results, k=k, largest=largest)
+        topk_values, topk_indices = torch.topk(results, k=k, largest=largest, dim=0)
         all_topk_values.append(topk_values)
         all_topk_indices.append(topk_indices)
 
@@ -189,7 +191,7 @@ def topk_across_batches(
     all_topk_indices_tensor = torch.cat(all_topk_indices)
 
     # Find the topk items across all batches.
-    topk = torch.topk(all_topk_values_tensor, k=k, largest=largest)
+    topk = torch.topk(all_topk_values_tensor, k=k, largest=largest, dim=0)
     topk_overall_values: torch.Tensor = topk.values
 
     # Now we have to do math to translate the indices into all_topk_distances
