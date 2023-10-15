@@ -141,7 +141,7 @@ def topk_across_batches(
     largest: bool,
     load_batch: Callable[[int], torch.Tensor],
     process_batch: Callable[[torch.Tensor], torch.Tensor],
-) -> Tuple[torch.Tensor, Iterable[int]]:
+) -> Tuple[torch.Tensor, torch.Tensor]:
     """Like torch.topk, but works across multiple batches of data. Always
     works over the batch dimension, which is assumed to be the first dimension
     of each batch.
@@ -196,7 +196,7 @@ def topk_across_batches(
 
     # Now we have to do math to translate the indices into all_topk_distances
     # into indices across all data items across all batches.
-    topk_overall_indices: List[int] = []
+    topk_overall_indices = []
     for i in topk.indices:
         # i is the index into all_topk_distances. First, let's figure
         # out which batch it came from.
@@ -205,13 +205,13 @@ def topk_across_batches(
         # Now we need to figure out which index into that batch it was.
         # all_topk_indices has the indices from the topk operation on
         # each batch.
-        index_within_batch = int(
-            all_topk_indices_tensor[i].item()
-        )  # int() is to satisfy mypy
+        index_within_batch = torch.gather(
+            all_topk_indices_tensor, dim=0, index=i.unsqueeze(0)
+        ).squeeze(0)
 
         topk_overall_indices.append(batch_idx * batch_size + index_within_batch)
 
-    return topk_overall_values, topk_overall_indices
+    return topk_overall_values, torch.stack(topk_overall_indices)
 
 # %% ../../nbs/experiments/block-internals.ipynb 16
 def batch_distances(batch: torch.Tensor, query: torch.Tensor) -> torch.Tensor:
