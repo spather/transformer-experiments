@@ -362,14 +362,13 @@ class BatchedBlockInternalsExperiment:
 
         def _process_batch(batch: torch.Tensor) -> torch.Tensor:
             B, _, _ = batch.shape
-            return torch.norm(
-                # Reshape the batch to combine all the T dimensions into one, then
-                # expand it to match the number of queries. We can then subtract
-                # the queries (also reshaped to combine the T dimensions into one)
-                # from the batch in one operation.
-                batch.reshape(B, 1, -1).expand(-1, n_queries, -1)
-                - queries.reshape(n_queries, -1),
-                dim=2,
+            # Batch and queries and both shape (B, s_len, n_embed).
+            # For the purposes of finding the closest values, we
+            # reshape both the batch and queries to eliminate the
+            # s_len dimension, effectively concatenating all the
+            # embedding tensors across positions.
+            return multi_batch_distances(
+                batch.reshape(B, -1), queries.reshape(n_queries, -1)
             )
 
         values, indices = topk_across_batches(
