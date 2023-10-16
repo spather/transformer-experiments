@@ -214,18 +214,7 @@ def topk_across_batches(
     return topk_overall_values, torch.stack(topk_overall_indices)
 
 # %% ../../nbs/experiments/block-internals.ipynb 16
-def batch_distances(batch: torch.Tensor, query: torch.Tensor) -> torch.Tensor:
-    """Returns the distance between each item in the batch and the query."""
-    assert batch.dim() == 2, f"batch.dim() should be 2, was {batch.dim()}"
-    assert (
-        batch.shape[1] == query.shape[0]
-    ), f"last dimension of batch was {batch.shape[1]}, which does not match first dimension of query {query.shape[0]}"
-
-    distances = torch.norm(batch - query, dim=1)
-    return distances
-
-# %% ../../nbs/experiments/block-internals.ipynb 17
-def multi_batch_distances(batch: torch.Tensor, queries: torch.Tensor) -> torch.Tensor:
+def batch_distances(batch: torch.Tensor, queries: torch.Tensor) -> torch.Tensor:
     """Returns the distance between each item in the batch and the queries."""
     assert batch.dim() == 2, f"batch.dim() should be 2, was {batch.dim()}"
     assert queries.dim() == 2, f"query.dim() should be 2, was {queries.dim()}"
@@ -245,7 +234,7 @@ def multi_batch_distances(batch: torch.Tensor, queries: torch.Tensor) -> torch.T
     )
     return distances
 
-# %% ../../nbs/experiments/block-internals.ipynb 18
+# %% ../../nbs/experiments/block-internals.ipynb 17
 class BatchedBlockInternalsExperiment:
     """Similar to BlockInternalsExperiment but rather than running
     all strings as one batch through the model, this one runs them
@@ -367,9 +356,7 @@ class BatchedBlockInternalsExperiment:
             # reshape both the batch and queries to eliminate the
             # s_len dimension, effectively concatenating all the
             # embedding tensors across positions.
-            return multi_batch_distances(
-                batch.reshape(B, -1), queries.reshape(n_queries, -1)
-            )
+            return batch_distances(batch.reshape(B, -1), queries.reshape(n_queries, -1))
 
         values, indices = topk_across_batches(
             n_batches=self.n_batches,
@@ -399,7 +386,7 @@ class BatchedBlockInternalsExperiment:
             k=k,
             largest=largest,
             load_batch=lambda i: torch.load(self._proj_output_filename(i, block_idx)),
-            process_batch=lambda batch: multi_batch_distances(
+            process_batch=lambda batch: batch_distances(
                 batch[:, t_i, :], queries=queries
             ),
         )
@@ -422,13 +409,13 @@ class BatchedBlockInternalsExperiment:
             k=k,
             largest=largest,
             load_batch=lambda i: torch.load(self._ffwd_output_filename(i, block_idx)),
-            process_batch=lambda batch: multi_batch_distances(
+            process_batch=lambda batch: batch_distances(
                 batch[:, t_i, :], queries=queries
             ),
         )
         return self._strings_from_indices(n_queries, indices), values
 
-# %% ../../nbs/experiments/block-internals.ipynb 19
+# %% ../../nbs/experiments/block-internals.ipynb 18
 @click.command()
 @click.argument("model_weights_filename", type=click.Path(exists=True))
 @click.argument("dataset_cache_filename", type=click.Path(exists=True))
@@ -483,7 +470,7 @@ def run(
 
     exp.run()
 
-# %% ../../nbs/experiments/block-internals.ipynb 20
+# %% ../../nbs/experiments/block-internals.ipynb 19
 class BlockInternalsAnalysis:
     """This class performs analysis of how the next token probabilities change
     as an embedded input is passed through each of the blocks in the model"""
