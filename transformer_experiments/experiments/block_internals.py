@@ -410,21 +410,24 @@ class BatchedBlockInternalsExperiment:
         self,
         block_idx: int,
         t_i: int,
-        query: torch.Tensor,
+        queries: torch.Tensor,
         k: int,
         largest: bool = True,
-    ) -> Tuple[Sequence[str], torch.Tensor]:
+    ) -> Tuple[Sequence[Sequence[str]], torch.Tensor]:
         """Returns the top k strings with the closest ffwd outputs
         to the specified query."""
+        n_queries, _ = queries.shape
         values, indices = topk_across_batches(
             n_batches=self.n_batches,
             batch_size=self.batch_size,
             k=k,
             largest=largest,
             load_batch=lambda i: torch.load(self._ffwd_output_filename(i, block_idx)),
-            process_batch=lambda batch: batch_distances(batch[:, t_i, :], query=query),
+            process_batch=lambda batch: multi_batch_distances(
+                batch[:, t_i, :], queries=queries
+            ),
         )
-        return [self.strings[i] for i in indices], values
+        return self._strings_from_indices(n_queries, indices), values
 
 # %% ../../nbs/experiments/block-internals.ipynb 19
 @click.command()
