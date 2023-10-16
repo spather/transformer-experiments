@@ -22,6 +22,7 @@ from tqdm.auto import tqdm
 # %% ../../nbs/experiments/block-internals.ipynb 7
 from ..common.databatcher import DataBatcher
 from ..common.substring_generator import all_unique_substrings
+from ..common.utils import topk_across_batches
 from ..dataset_split import split_text_dataset
 from transformer_experiments.datasets.tinyshakespeare import (
     TinyShakespeareDataSet,
@@ -134,86 +135,6 @@ class BlockInternalsExperiment:
         return self.io_accessors[block_idx].output(".")
 
 # %% ../../nbs/experiments/block-internals.ipynb 14
-def topk_across_batches(
-    n_batches: int,
-    batch_size: int,
-    k: int,
-    largest: bool,
-    load_batch: Callable[[int], torch.Tensor],
-    process_batch: Callable[[torch.Tensor], torch.Tensor],
-) -> Tuple[torch.Tensor, torch.Tensor]:
-    """Like torch.topk, but works across multiple batches of data. Always
-    works over the batch dimension, which is assumed to be the first dimension
-    of each batch.
-
-    Parameters:
-    -----------
-    n_batches:
-        The number of batches to process.
-    batch_size:
-        The size of each batch (the last batch may be smaller).
-    k:
-        The number of top values to return.
-    largest:
-        Whether to return the largest or smallest values.
-    load_batch:
-        A function that takes a batch index and returns a batch of data.
-    process_batch:
-        A function that takes a batch of data and returns a tensor of
-        values, with the same first dimension size as the batch. The function
-        will return the top k of these values along the batch dimension.
-
-    Returns:
-    --------
-        A tuple of (values, indices) where indices is a list of indices into
-        the overall dataset i.e. across all batches.
-    """
-    all_topk_values = []
-    all_topk_indices = []
-
-    # Go through each batch and find the top k closest items
-    # within that batch.
-    for batch_idx in range(n_batches):
-        batch = load_batch(batch_idx)
-
-        results = process_batch(batch)
-
-        assert (
-            results.shape[0] == batch.shape[0]
-        ), f"Batch had {batch.shape[0]} items, but results had {results.shape[0]} items."
-
-        topk_values, topk_indices = torch.topk(results, k=k, largest=largest, dim=0)
-        all_topk_values.append(topk_values)
-        all_topk_indices.append(topk_indices)
-
-    # Combine the results from all batches.
-    all_topk_values_tensor = torch.cat(all_topk_values)
-    all_topk_indices_tensor = torch.cat(all_topk_indices)
-
-    # Find the topk items across all batches.
-    topk = torch.topk(all_topk_values_tensor, k=k, largest=largest, dim=0)
-    topk_overall_values: torch.Tensor = topk.values
-
-    # Now we have to do math to translate the indices into all_topk_distances
-    # into indices across all data items across all batches.
-    topk_overall_indices = []
-    for i in topk.indices:
-        # i is the index into all_topk_distances. First, let's figure
-        # out which batch it came from.
-        batch_idx = i // k
-
-        # Now we need to figure out which index into that batch it was.
-        # all_topk_indices has the indices from the topk operation on
-        # each batch.
-        index_within_batch = torch.gather(
-            all_topk_indices_tensor, dim=0, index=i.unsqueeze(0)
-        ).squeeze(0)
-
-        topk_overall_indices.append(batch_idx * batch_size + index_within_batch)
-
-    return topk_overall_values, torch.stack(topk_overall_indices)
-
-# %% ../../nbs/experiments/block-internals.ipynb 16
 def batch_distances(batch: torch.Tensor, queries: torch.Tensor) -> torch.Tensor:
     """Returns the distance between each item in the batch and the queries."""
     assert batch.dim() == 2, f"batch.dim() should be 2, was {batch.dim()}"
@@ -234,7 +155,7 @@ def batch_distances(batch: torch.Tensor, queries: torch.Tensor) -> torch.Tensor:
     )
     return distances
 
-# %% ../../nbs/experiments/block-internals.ipynb 17
+# %% ../../nbs/experiments/block-internals.ipynb 15
 class BatchedBlockInternalsExperiment:
     """Similar to BlockInternalsExperiment but rather than running
     all strings as one batch through the model, this one runs them
@@ -415,7 +336,7 @@ class BatchedBlockInternalsExperiment:
         )
         return self._strings_from_indices(n_queries, indices), values
 
-# %% ../../nbs/experiments/block-internals.ipynb 18
+# %% ../../nbs/experiments/block-internals.ipynb 16
 @click.command()
 @click.argument("model_weights_filename", type=click.Path(exists=True))
 @click.argument("dataset_cache_filename", type=click.Path(exists=True))
@@ -470,7 +391,7 @@ def run(
 
     exp.run()
 
-# %% ../../nbs/experiments/block-internals.ipynb 19
+# %% ../../nbs/experiments/block-internals.ipynb 17
 class BlockInternalsAnalysis:
     """This class performs analysis of how the next token probabilities change
     as an embedded input is passed through each of the blocks in the model"""
