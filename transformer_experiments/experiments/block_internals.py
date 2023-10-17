@@ -2,7 +2,7 @@
 
 # %% auto 0
 __all__ = ['BlockInternalsAccessors', 'BlockInternalsExperiment', 'BatchedBlockInternalsExperiment', 'run',
-           'BlockInternalsAnalysis']
+           'BatchedBlockInternalsExperimentSlicer', 'BlockInternalsAnalysis']
 
 # %% ../../nbs/experiments/block-internals.ipynb 5
 from collections import OrderedDict
@@ -181,8 +181,11 @@ class BatchedBlockInternalsExperiment:
 
         self.n_batches = math.ceil(len(self.strings) / self.batch_size)
 
-    def run(self):
-        for batch_idx in tqdm(range(self.n_batches)):
+    def sample_length(self) -> int:
+        return len(self.strings[0])
+
+    def run(self, disable_progress_bars: bool = False):
+        for batch_idx in tqdm(range(self.n_batches), disable=disable_progress_bars):
             start_idx = batch_idx * self.batch_size
             end_idx = start_idx + self.batch_size
             batch_strings = self.strings[start_idx:end_idx]
@@ -290,53 +293,7 @@ class BatchedBlockInternalsExperiment:
 
         return self._strings_from_indices(n_queries, indices), values
 
-    def strings_with_topk_closest_proj_outputs(
-        self,
-        block_idx: int,
-        t_i: int,
-        queries: torch.Tensor,
-        k: int,
-        largest: bool = True,
-    ) -> Tuple[Sequence[Sequence[str]], torch.Tensor]:
-        """Returns the top k strings with the closest proj outputs
-        to the specified query."""
-        n_queries, _ = queries.shape
-        values, indices = topk_across_batches(
-            n_batches=self.n_batches,
-            batch_size=self.batch_size,
-            k=k,
-            largest=largest,
-            load_batch=lambda i: torch.load(self._proj_output_filename(i, block_idx)),
-            process_batch=lambda batch: batch_distances(
-                batch[:, t_i, :], queries=queries
-            ),
-        )
-        return self._strings_from_indices(n_queries, indices), values
-
-    def strings_with_topk_closest_ffwd_outputs(
-        self,
-        block_idx: int,
-        t_i: int,
-        queries: torch.Tensor,
-        k: int,
-        largest: bool = True,
-    ) -> Tuple[Sequence[Sequence[str]], torch.Tensor]:
-        """Returns the top k strings with the closest ffwd outputs
-        to the specified query."""
-        n_queries, _ = queries.shape
-        values, indices = topk_across_batches(
-            n_batches=self.n_batches,
-            batch_size=self.batch_size,
-            k=k,
-            largest=largest,
-            load_batch=lambda i: torch.load(self._ffwd_output_filename(i, block_idx)),
-            process_batch=lambda batch: batch_distances(
-                batch[:, t_i, :], queries=queries
-            ),
-        )
-        return self._strings_from_indices(n_queries, indices), values
-
-# %% ../../nbs/experiments/block-internals.ipynb 16
+# %% ../../nbs/experiments/block-internals.ipynb 17
 @click.command()
 @click.argument("model_weights_filename", type=click.Path(exists=True))
 @click.argument("dataset_cache_filename", type=click.Path(exists=True))
@@ -391,7 +348,144 @@ def run(
 
     exp.run()
 
-# %% ../../nbs/experiments/block-internals.ipynb 17
+# %% ../../nbs/experiments/block-internals.ipynb 18
+class BatchedBlockInternalsExperimentSlicer:
+    """Companion class to BatchedBlockInternalsExperiment that "slices" the
+    data files along a particular t_i dimension to make for faster loading
+    when computing closest proj outputs and ffwd outputs."""
+
+    def __init__(
+        self,
+        exp: BatchedBlockInternalsExperiment,
+        output_dir: Path,
+        t_i: int,
+        combine_n_batches: int = 10,
+    ):
+        self.exp = exp
+        self.output_dir = output_dir
+
+        # Convert negative indices to positive
+        if t_i < 0:
+            t_i = self.exp.sample_length() + t_i
+
+        assert t_i > 0, f"converted t_i must be positive, was {t_i}"
+
+        self.t_i = t_i
+        self.combine_n_batches = combine_n_batches
+
+        self.batch_size = exp.batch_size * combine_n_batches
+        self.n_batches = math.ceil(len(exp.strings) / self.batch_size)
+
+    def _proj_output_filename(self, batch_idx: int, block_idx: int) -> Path:
+        return (
+            self.output_dir
+            / f"proj_output-{batch_idx:03d}-{block_idx:02d}-{self.t_i:03d}.pt"
+        )
+
+    def _ffwd_output_filename(self, batch_idx: int, block_idx: int) -> Path:
+        return (
+            self.output_dir
+            / f"ffwd_output-{batch_idx:03d}-{block_idx:02d}-{self.t_i:03d}.pt"
+        )
+
+    def create_slices(
+        self,
+        get_in_filename: Callable[[int, int], Path],
+        get_out_filename: Callable[[int, int], Path],
+        disable_progress_bars: bool = False,
+    ):
+        for block_idx in range(n_layer):
+            slices = []
+            for batch_idx in tqdm(
+                range(self.exp.n_batches), disable=disable_progress_bars
+            ):
+                batch = torch.load(get_in_filename(batch_idx, block_idx))
+                slices.append(batch[:, self.t_i, :].clone())
+
+                if (batch_idx + 1) % self.combine_n_batches == 0:
+                    torch.save(
+                        torch.cat(slices),
+                        get_out_filename(
+                            batch_idx // self.combine_n_batches, block_idx
+                        ),
+                    )
+                    slices = []
+            if len(slices) > 0:
+                torch.save(
+                    torch.cat(slices),
+                    get_out_filename(batch_idx // self.combine_n_batches, block_idx),
+                )
+                slices = []
+
+    def create_proj_output_slices(self, disable_progress_bars: bool = False):
+        self.create_slices(
+            self.exp._proj_output_filename,
+            self._proj_output_filename,
+            disable_progress_bars=disable_progress_bars,
+        )
+
+    def create_ffwd_output_slices(self, disable_progress_bars: bool = False):
+        self.create_slices(
+            self.exp._ffwd_output_filename,
+            self._ffwd_output_filename,
+            disable_progress_bars=disable_progress_bars,
+        )
+
+    def create_slices_if_needed(self, disable_progress_bars: bool = False):
+        if not self.output_dir.exists():
+            raise ValueError(f"{self.output_dir} does not exist")
+
+        try:
+            _ = next(iter(self.output_dir.glob(f"proj_output*-{self.t_i:03d}.pt")))
+        except StopIteration:
+            self.create_proj_output_slices(disable_progress_bars=disable_progress_bars)
+
+        try:
+            _ = next(iter(self.output_dir.glob(f"ffwd_output*-{self.t_i:03d}.pt")))
+        except StopIteration:
+            self.create_ffwd_output_slices(disable_progress_bars=disable_progress_bars)
+
+    def strings_with_topk_closest_proj_outputs(
+        self,
+        block_idx: int,
+        queries: torch.Tensor,
+        k: int,
+        largest: bool = True,
+    ) -> Tuple[Sequence[Sequence[str]], torch.Tensor]:
+        """Returns the top k strings with the closest proj outputs
+        to the specified query."""
+        n_queries, _ = queries.shape
+        values, indices = topk_across_batches(
+            n_batches=self.n_batches,
+            batch_size=self.batch_size,
+            k=k,
+            largest=largest,
+            load_batch=lambda i: torch.load(self._proj_output_filename(i, block_idx)),
+            process_batch=lambda batch: batch_distances(batch, queries=queries),
+        )
+        return self.exp._strings_from_indices(n_queries, indices), values
+
+    def strings_with_topk_closest_ffwd_outputs(
+        self,
+        block_idx: int,
+        queries: torch.Tensor,
+        k: int,
+        largest: bool = True,
+    ) -> Tuple[Sequence[Sequence[str]], torch.Tensor]:
+        """Returns the top k strings with the closest ffwd outputs
+        to the specified query."""
+        n_queries, _ = queries.shape
+        values, indices = topk_across_batches(
+            n_batches=self.n_batches,
+            batch_size=self.batch_size,
+            k=k,
+            largest=largest,
+            load_batch=lambda i: torch.load(self._ffwd_output_filename(i, block_idx)),
+            process_batch=lambda batch: batch_distances(batch, queries=queries),
+        )
+        return self.exp._strings_from_indices(n_queries, indices), values
+
+# %% ../../nbs/experiments/block-internals.ipynb 20
 class BlockInternalsAnalysis:
     """This class performs analysis of how the next token probabilities change
     as an embedded input is passed through each of the blocks in the model"""
