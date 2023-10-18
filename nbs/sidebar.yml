@@ -2,9 +2,17 @@ website:
   sidebar:
     contents:
       - index.ipynb
+      - section: analyses
+        contents:
+          - analyses/00_introduction.ipynb
+          - analyses/10_clustering_block_intermediates.ipynb
+      - section: blog_posts
+        contents:
+          - blog_posts/block_internals.ipynb
       - section: common
         contents:
           - common/databatcher.ipynb
+          - common/substring-generator.ipynb
           - common/text-analysis.ipynb
           - common/utils.ipynb
       - section: datasets
@@ -27,7 +35,3 @@ website:
       - section: training
         contents:
           - training/dataset-split.ipynb
-      - section: writeups
-        contents:
-          - writeups/00_introduction.ipynb
-          - writeups/10_clustering_block_intermediates.ipynb
