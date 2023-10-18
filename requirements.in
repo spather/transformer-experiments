@@ -6,7 +6,6 @@
 
 click
 ipywidgets
-ipympl
 matplotlib
 nbdev
 numpy
