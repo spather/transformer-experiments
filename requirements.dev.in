@@ -1,8 +1,11 @@
 # Compile this file with:
-#   pip-compile --output-file=requirements.dev.txt requirements.dev.in
+#   pip-compile --output-file=requirements.dev.txt requirements.dev.in --resolver=backtracking
 #
 # Then install with
 #   pip install -r requirements.dev.txt
+
+# Constrain to packages already in main requirements.txt https://github.com/jazzband/pip-tools#workflow-for-layered-requirements
+-c requirements.txt
 
 black
 ipykernel

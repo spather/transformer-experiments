@@ -1,18 +1,19 @@
 # Compile this file with:
-#   pip-compile --output-file=requirements.txt requirements.in
+#   pip-compile --output-file=requirements.txt requirements.in --resolver=backtracking
 #
 # Then install with
 #   pip install -r requirements.txt
 
 click
 ipywidgets
+manim
 matplotlib
 nbdev
 numpy
 pandas
 requests
-scikit-learn
 seaborn
+scikit-learn
 sympy
 torch
 tqdm

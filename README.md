@@ -29,6 +29,12 @@ pip install -r requirements.txt
 pip install -r requirements.dev.txt
 ```
 
+3.  Install this library in editable mode
+
+``` bash
+pip install -e '.[dev]'
+```
+
 ### Before committing any changes
 
 Run the following to ensure all dependencies are generated from
