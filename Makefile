@@ -72,6 +72,108 @@ $(BLOCK_INTERNALS_SLEN3_SENTINEL):
 
 block_internals_slen3_dataset: $(BLOCK_INTERNALS_SLEN3_SENTINEL)
 
+# -- Sample Length 4 --
+BLOCK_INTERNALS_SLEN4_DIR:=$(BLOCK_INTERNALS_DATA_DIR)/slen4
+BLOCK_INTERNALS_SLEN4_SENTINEL:=$(BLOCK_INTERNALS_SLEN4_DIR)/__data_generated
+
+$(BLOCK_INTERNALS_SLEN4_SENTINEL):
+	@echo "Generating block internals slen4 data set"
+	@mkdir -p $(BLOCK_INTERNALS_SLEN4_DIR)
+	block_internals_exp_run \
+		$(ROOT_DIR)/nbs/artifacts/shakespeare.pt \
+		$(ROOT_DIR)/nbs/artifacts/input.txt \
+		$(BLOCK_INTERNALS_SLEN4_DIR) \
+		--sample_len 4 \
+		--max_batch_size 10000
+	@touch $(BLOCK_INTERNALS_SLEN4_SENTINEL)
+
+block_internals_slen4_dataset: $(BLOCK_INTERNALS_SLEN4_SENTINEL)
+
+# -- Sample Length 5 --
+BLOCK_INTERNALS_SLEN5_DIR:=$(BLOCK_INTERNALS_DATA_DIR)/slen5
+BLOCK_INTERNALS_SLEN5_SENTINEL:=$(BLOCK_INTERNALS_SLEN5_DIR)/__data_generated
+
+$(BLOCK_INTERNALS_SLEN5_SENTINEL):
+	@echo "Generating block internals slen5 data set"
+	@mkdir -p $(BLOCK_INTERNALS_SLEN5_DIR)
+	block_internals_exp_run \
+		$(ROOT_DIR)/nbs/artifacts/shakespeare.pt \
+		$(ROOT_DIR)/nbs/artifacts/input.txt \
+		$(BLOCK_INTERNALS_SLEN5_DIR) \
+		--sample_len 5 \
+		--max_batch_size 10000
+	@touch $(BLOCK_INTERNALS_SLEN5_SENTINEL)
+
+block_internals_slen5_dataset: $(BLOCK_INTERNALS_SLEN5_SENTINEL)
+
+# -- Sample Length 6 --
+BLOCK_INTERNALS_SLEN6_DIR:=$(BLOCK_INTERNALS_DATA_DIR)/slen6
+BLOCK_INTERNALS_SLEN6_SENTINEL:=$(BLOCK_INTERNALS_SLEN6_DIR)/__data_generated
+
+$(BLOCK_INTERNALS_SLEN6_SENTINEL):
+	@echo "Generating block internals slen6 data set"
+	@mkdir -p $(BLOCK_INTERNALS_SLEN6_DIR)
+	block_internals_exp_run \
+		$(ROOT_DIR)/nbs/artifacts/shakespeare.pt \
+		$(ROOT_DIR)/nbs/artifacts/input.txt \
+		$(BLOCK_INTERNALS_SLEN6_DIR) \
+		--sample_len 6 \
+		--max_batch_size 10000
+	@touch $(BLOCK_INTERNALS_SLEN6_SENTINEL)
+
+block_internals_slen6_dataset: $(BLOCK_INTERNALS_SLEN6_SENTINEL)
+
+# -- Sample Length 7 --
+BLOCK_INTERNALS_SLEN7_DIR:=$(BLOCK_INTERNALS_DATA_DIR)/slen7
+BLOCK_INTERNALS_SLEN7_SENTINEL:=$(BLOCK_INTERNALS_SLEN7_DIR)/__data_generated
+
+$(BLOCK_INTERNALS_SLEN7_SENTINEL):
+	@echo "Generating block internals slen7 data set"
+	@mkdir -p $(BLOCK_INTERNALS_SLEN7_DIR)
+	block_internals_exp_run \
+		$(ROOT_DIR)/nbs/artifacts/shakespeare.pt \
+		$(ROOT_DIR)/nbs/artifacts/input.txt \
+		$(BLOCK_INTERNALS_SLEN7_DIR) \
+		--sample_len 7 \
+		--max_batch_size 10000
+	@touch $(BLOCK_INTERNALS_SLEN7_SENTINEL)
+
+block_internals_slen7_dataset: $(BLOCK_INTERNALS_SLEN7_SENTINEL)
+
+# -- Sample Length 8 --
+BLOCK_INTERNALS_SLEN8_DIR:=$(BLOCK_INTERNALS_DATA_DIR)/slen8
+BLOCK_INTERNALS_SLEN8_SENTINEL:=$(BLOCK_INTERNALS_SLEN8_DIR)/__data_generated
+
+$(BLOCK_INTERNALS_SLEN8_SENTINEL):
+	@echo "Generating block internals slen8 data set"
+	@mkdir -p $(BLOCK_INTERNALS_SLEN8_DIR)
+	block_internals_exp_run \
+		$(ROOT_DIR)/nbs/artifacts/shakespeare.pt \
+		$(ROOT_DIR)/nbs/artifacts/input.txt \
+		$(BLOCK_INTERNALS_SLEN8_DIR) \
+		--sample_len 8 \
+		--max_batch_size 10000
+	@touch $(BLOCK_INTERNALS_SLEN8_SENTINEL)
+
+block_internals_slen8_dataset: $(BLOCK_INTERNALS_SLEN8_SENTINEL)
+
+# -- Sample Length 9 --
+BLOCK_INTERNALS_SLEN9_DIR:=$(BLOCK_INTERNALS_DATA_DIR)/slen9
+BLOCK_INTERNALS_SLEN9_SENTINEL:=$(BLOCK_INTERNALS_SLEN9_DIR)/__data_generated
+
+$(BLOCK_INTERNALS_SLEN9_SENTINEL):
+	@echo "Generating block internals slen9 data set"
+	@mkdir -p $(BLOCK_INTERNALS_SLEN9_DIR)
+	block_internals_exp_run \
+		$(ROOT_DIR)/nbs/artifacts/shakespeare.pt \
+		$(ROOT_DIR)/nbs/artifacts/input.txt \
+		$(BLOCK_INTERNALS_SLEN9_DIR) \
+		--sample_len 9 \
+		--max_batch_size 10000
+	@touch $(BLOCK_INTERNALS_SLEN9_SENTINEL)
+
+block_internals_slen9_dataset: $(BLOCK_INTERNALS_SLEN9_SENTINEL)
+
 # -- Sample Length 10 --
 BLOCK_INTERNALS_SLEN10_DIR:=$(BLOCK_INTERNALS_DATA_DIR)/slen10
 BLOCK_INTERNALS_SLEN10_SENTINEL:=$(BLOCK_INTERNALS_SLEN10_DIR)/__data_generated
