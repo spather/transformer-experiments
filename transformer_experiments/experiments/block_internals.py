@@ -368,7 +368,7 @@ class BatchedBlockInternalsExperimentSlicer:
         if t_i < 0:
             t_i = self.exp.sample_length() + t_i
 
-        assert t_i > 0, f"converted t_i must be positive, was {t_i}"
+        assert t_i >= 0, f"converted t_i must be >= 0, was {t_i}"
 
         self.t_i = t_i
         self.combine_n_batches = combine_n_batches
