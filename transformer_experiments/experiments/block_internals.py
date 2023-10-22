@@ -287,7 +287,9 @@ class BatchedBlockInternalsExperiment:
             batch_size=self.batch_size,
             k=k,
             largest=largest,
-            load_batch=lambda i: torch.load(self._embeddings_filename(i)),
+            load_batch=lambda i: torch.load(
+                str(self._embeddings_filename(i)), mmap=True
+            ),
             process_batch=_process_batch,
         )
 
