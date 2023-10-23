@@ -245,17 +245,17 @@ class BatchedBlockInternalsExperiment:
         """Returns the index of the specified string."""
         return self.idx_map[s]
 
-    def _strings_from_indices(
-        self, n_queries: int, indices: torch.Tensor
-    ) -> List[List[str]]:
-        # We're going to return a list of lists of strings, where each
-        # inner list contains the strings that were closest to the query
-        # at the corresponding index.
-        strings: List[List[str]] = [[] for _ in range(n_queries)]
+    def strings_from_indices(self, indices: torch.Tensor) -> List[List[str]]:
+        """Returns the strings corresponding to the specified indices.
+        Indices is expected to be of shape (k, n). The returned list
+        will have n elements, each of which is a list of k strings."""
+        _, n = indices.shape
 
-        # Each row n in indices contains the indices of the nth closest
-        # strings to each query. Look up the strings and append them to
-        # each list
+        # We're going to return a list of lists of strings. The
+        # string at index [i][j] in the returned list is the
+        # string corresponding to indices[j, i].
+        strings: List[List[str]] = [[] for _ in range(n)]
+
         for ind in indices:
             for i, idx in enumerate(ind):
                 strings[i].append(self.strings[idx])
@@ -293,7 +293,7 @@ class BatchedBlockInternalsExperiment:
             process_batch=_process_batch,
         )
 
-        return self._strings_from_indices(n_queries, indices), values
+        return self.strings_from_indices(indices), values
 
 # %% ../../nbs/experiments/block-internals.ipynb 17
 @click.command()
@@ -467,7 +467,7 @@ class BatchedBlockInternalsExperimentSlicer:
             ),
             process_batch=lambda batch: batch_distances(batch, queries=queries),
         )
-        return self.exp._strings_from_indices(n_queries, indices), values
+        return self.exp.strings_from_indices(indices), values
 
     def strings_with_topk_closest_ffwd_outputs(
         self,
@@ -489,7 +489,7 @@ class BatchedBlockInternalsExperimentSlicer:
             ),
             process_batch=lambda batch: batch_distances(batch, queries=queries),
         )
-        return self.exp._strings_from_indices(n_queries, indices), values
+        return self.exp.strings_from_indices(indices), values
 
 # %% ../../nbs/experiments/block-internals.ipynb 20
 class BlockInternalsAnalysis:
