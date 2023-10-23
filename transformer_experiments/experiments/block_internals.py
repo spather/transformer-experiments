@@ -462,7 +462,9 @@ class BatchedBlockInternalsExperimentSlicer:
             batch_size=self.batch_size,
             k=k,
             largest=largest,
-            load_batch=lambda i: torch.load(self._proj_output_filename(i, block_idx)),
+            load_batch=lambda i: torch.load(
+                str(self._proj_output_filename(i, block_idx)), mmap=True
+            ),
             process_batch=lambda batch: batch_distances(batch, queries=queries),
         )
         return self.exp._strings_from_indices(n_queries, indices), values
@@ -482,7 +484,9 @@ class BatchedBlockInternalsExperimentSlicer:
             batch_size=self.batch_size,
             k=k,
             largest=largest,
-            load_batch=lambda i: torch.load(self._ffwd_output_filename(i, block_idx)),
+            load_batch=lambda i: torch.load(
+                str(self._ffwd_output_filename(i, block_idx)), mmap=True
+            ),
             process_batch=lambda batch: batch_distances(batch, queries=queries),
         )
         return self.exp._strings_from_indices(n_queries, indices), values
