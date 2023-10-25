@@ -2,7 +2,7 @@
 
 # %% auto 0
 __all__ = ['SimilarStringsData', 'SimilarStringsResult', 'SimilarStringsExperiment', 'run', 'generate_string_to_batch_map',
-           'generate_similars', 'embeddings', 'proj_out']
+           'generate_similars', 'embeddings', 'proj_out', 'ffwd_out']
 
 # %% ../../nbs/experiments/similar-strings.ipynb 5
 from collections import defaultdict, OrderedDict
@@ -161,49 +161,43 @@ class SimilarStringsExperiment:
         disable_progress_bars: bool = False,
         n_similars: int = 10,
     ):
+        filename_t_i = t_i
+        if filename_t_i < 0:
+            filename_t_i = exp.sample_length() + filename_t_i
+        assert filename_t_i >= 0, f"converted t_i must be >= 0, was {filename_t_i}"
+
         n_batches = math.ceil(len(strings) / batch_size)
 
-        # We iterate over blocks first and then go through all
-        # the batches so that we only load the data once for all
-        # batches.
-        for block_idx in tqdm(range(n_layer), disable=disable_progress_bars):
-            with exp.load_proj_out_data(block_idx=block_idx) as data:
-                for batch_idx in range(n_batches):
-                    start_idx = batch_idx * batch_size
-                    end_idx = start_idx + batch_size
-                    batch_strings = strings[start_idx:end_idx]
+        for batch_idx in tqdm(range(n_batches), disable=disable_progress_bars):
+            start_idx = batch_idx * batch_size
+            end_idx = start_idx + batch_size
+            batch_strings = strings[start_idx:end_idx]
 
-                    batch_exp = BlockInternalsExperiment(
-                        self.encoding_helpers, accessors, batch_strings
-                    )
+            batch_exp = BlockInternalsExperiment(
+                self.encoding_helpers, accessors, batch_strings
+            )
 
-                    filename_t_i = t_i
-                    if filename_t_i < 0:
-                        filename_t_i = exp.sample_length() + filename_t_i
-                    assert (
-                        filename_t_i >= 0
-                    ), f"converted t_i must be >= 0, was {filename_t_i}"
-
-                    # Compute the proj_out similar strings
-                    sim_strings, distances = strings_for_topk_closest_items(
-                        data=data[:, t_i, :],
-                        exp=exp,
-                        queries=batch_exp.proj_output(block_idx)[:, t_i, :],
-                        k=n_similars,
-                        largest=False,
+            for block_idx in range(n_layer):
+                # Compute the proj_out similar strings
+                sim_strings, distances = exp.strings_with_topk_closest_proj_outputs(
+                    block_idx=block_idx,
+                    t_i=t_i,
+                    queries=batch_exp.proj_output(block_idx)[:, t_i, :],
+                    k=n_similars,
+                    largest=False,
+                )
+                self._proj_out_sim_strings_filename(
+                    batch_idx, block_idx, filename_t_i
+                ).write_text(
+                    json.dumps(
+                        {
+                            "strings": {s: i for i, s in enumerate(batch_strings)},
+                            "sim_strings": sim_strings,
+                            "distances": distances.tolist(),
+                        },
+                        indent=2,
                     )
-                    self._proj_out_sim_strings_filename(
-                        batch_idx, block_idx, filename_t_i
-                    ).write_text(
-                        json.dumps(
-                            {
-                                "strings": {s: i for i, s in enumerate(batch_strings)},
-                                "sim_strings": sim_strings,
-                                "distances": distances.tolist(),
-                            },
-                            indent=2,
-                        )
-                    )
+                )
 
     def generate_ffwd_out_files(
         self,
@@ -217,47 +211,41 @@ class SimilarStringsExperiment:
     ):
         n_batches = math.ceil(len(strings) / batch_size)
 
-        # We iterate over blocks first and then go through all
-        # the batches so that we only load the data once for all
-        # batches.
+        filename_t_i = t_i
+        if filename_t_i < 0:
+            filename_t_i = exp.sample_length() + filename_t_i
+        assert filename_t_i >= 0, f"converted t_i must be >= 0, was {filename_t_i}"
 
-        for block_idx in tqdm(range(n_layer), disable=disable_progress_bars):
-            with exp.load_ffwd_out_data(block_idx=block_idx) as data:
-                for batch_idx in range(n_batches):
-                    start_idx = batch_idx * batch_size
-                    end_idx = start_idx + batch_size
-                    batch_strings = strings[start_idx:end_idx]
+        for batch_idx in tqdm(range(n_batches), disable=disable_progress_bars):
+            start_idx = batch_idx * batch_size
+            end_idx = start_idx + batch_size
+            batch_strings = strings[start_idx:end_idx]
 
-                    batch_exp = BlockInternalsExperiment(
-                        self.encoding_helpers, accessors, batch_strings
+            batch_exp = BlockInternalsExperiment(
+                self.encoding_helpers, accessors, batch_strings
+            )
+
+            for block_idx in range(n_layer):
+                sim_strings, distances = exp.strings_with_topk_closest_ffwd_outputs(
+                    block_idx=block_idx,
+                    t_i=t_i,
+                    queries=batch_exp.ffwd_output(block_idx)[:, t_i, :],
+                    k=n_similars,
+                    largest=False,
+                )
+
+                self._ffwd_out_sim_strings_filename(
+                    batch_idx, block_idx, filename_t_i
+                ).write_text(
+                    json.dumps(
+                        {
+                            "strings": {s: i for i, s in enumerate(batch_strings)},
+                            "sim_strings": sim_strings,
+                            "distances": distances.tolist(),
+                        },
+                        indent=2,
                     )
-
-                    filename_t_i = t_i
-                    if filename_t_i < 0:
-                        filename_t_i = exp.sample_length() + filename_t_i
-                    assert (
-                        filename_t_i >= 0
-                    ), f"converted t_i must be >= 0, was {filename_t_i}"
-
-                    sim_strings, distances = strings_for_topk_closest_items(
-                        data=data[:, t_i, :],
-                        exp=exp,
-                        queries=batch_exp.ffwd_output(block_idx)[:, t_i, :],
-                        k=n_similars,
-                        largest=False,
-                    )
-                    self._ffwd_out_sim_strings_filename(
-                        batch_idx, block_idx, filename_t_i
-                    ).write_text(
-                        json.dumps(
-                            {
-                                "strings": {s: i for i, s in enumerate(batch_strings)},
-                                "sim_strings": sim_strings,
-                                "distances": distances.tolist(),
-                            },
-                            indent=2,
-                        )
-                    )
+                )
 
     def _load_json(self, file: Path):
         return json.loads(file.read_text())
@@ -544,3 +532,36 @@ def proj_out(ctx: click.Context, t_index: int):
     )
 
     click.echo("Generated proj_out similar strings files.")
+
+
+@generate_similars.command()
+@click.option(
+    "-t",
+    "--t_index",
+    required=True,
+    type=click.IntRange(min=0),
+)
+@click.pass_context
+def ffwd_out(ctx: click.Context, t_index: int):
+    click.echo("Generating ffwd_out similars...")
+    click.echo(f"  t_index: {t_index}")
+
+    if t_index >= ctx.obj["exp"].sample_length():
+        raise click.BadParameter(
+            f"t_index must be less than sample length ({ctx.obj['exp'].sample_length()})",
+            param_hint="t_index",
+        )
+
+    ss_exp: SimilarStringsExperiment = ctx.obj["ss_exp"]
+    accessors: TransformerAccessors = ctx.obj["accessors"]
+
+    ss_exp.generate_ffwd_out_files(
+        ctx.obj["strings"],
+        t_index,
+        accessors,
+        ctx.obj["exp"],
+        batch_size=ctx.obj["batch_size"],
+        n_similars=ctx.obj["n_similars"],
+    )
+
+    click.echo("Generated ffwd_out similar strings files.")

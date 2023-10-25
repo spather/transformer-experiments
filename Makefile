@@ -190,3 +190,90 @@ $(BLOCK_INTERNALS_SLEN10_SENTINEL):
 	@touch $(BLOCK_INTERNALS_SLEN10_SENTINEL)
 
 block_internals_slen10_dataset: $(BLOCK_INTERNALS_SLEN10_SENTINEL)
+
+# ====== Similar Strings ======
+SIMILAR_STRINGS_SLEN10_DIR:=$(BLOCK_INTERNALS_SLEN10_DIR)/similar_strings
+
+similar_strings_slen10_all: similar_strings_slen10_map similar_strings_slen10_embeddings similar_strings_slen10_proj_outputs similar_strings_slen10_ffwd_outputs
+
+# -- String to batch map --
+SIMILAR_STRINGS_SLEN10_MAP_SENTINEL:=$(SIMILAR_STRINGS_SLEN10_DIR)/__map_data_generated
+$(SIMILAR_STRINGS_SLEN10_MAP_SENTINEL):
+	@echo "Generating strings to batch map"
+	@mkdir -p $(SIMILAR_STRINGS_SLEN10_DIR)
+	similar_strings_exp_run \
+		--batch_size 100 \
+		--sample_len 10 \
+		--random_seed 1337 \
+		--n_samples 20000 \
+		$(ROOT_DIR)/nbs/artifacts/input.txt \
+		$(SIMILAR_STRINGS_SLEN10_DIR) \
+		generate-string-to-batch-map
+	@touch $(SIMILAR_STRINGS_SLEN10_MAP_SENTINEL)
+
+similar_strings_slen10_map: $(SIMILAR_STRINGS_SLEN10_MAP_SENTINEL)
+
+# -- Embeddings --
+SIMILAR_STRINGS_SLEN10_EMBEDDINGS_SENTINEL:=$(SIMILAR_STRINGS_SLEN10_DIR)/__embeddings_data_generated
+$(SIMILAR_STRINGS_SLEN10_EMBEDDINGS_SENTINEL):
+	@echo "Generating embeddings"
+	@mkdir -p $(SIMILAR_STRINGS_SLEN10_DIR)
+	similar_strings_exp_run \
+		--batch_size 100 \
+		--sample_len 10 \
+		--random_seed 1337 \
+		--n_samples 20000 \
+		$(ROOT_DIR)/nbs/artifacts/input.txt \
+		$(SIMILAR_STRINGS_SLEN10_DIR) \
+		generate-similars \
+		--block_internals_experiment_output_folder $(BLOCK_INTERNALS_SLEN10_DIR) \
+		--block_internals_experiment_max_batch_size 10000 \
+		$(ROOT_DIR)/nbs/artifacts/shakespeare.pt \
+		embeddings
+	@touch $(SIMILAR_STRINGS_SLEN10_EMBEDDINGS_SENTINEL)
+
+similar_strings_slen10_embeddings: $(SIMILAR_STRINGS_SLEN10_EMBEDDINGS_SENTINEL)
+
+# -- Proj Outputs --
+SIMILAR_STRINGS_SLEN10_PROJ_OUTPUTS_SENTINEL:=$(SIMILAR_STRINGS_SLEN10_DIR)/__proj_outputs_data_generated
+$(SIMILAR_STRINGS_SLEN10_PROJ_OUTPUTS_SENTINEL):
+	@echo "Generating proj outputs"
+	@mkdir -p $(SIMILAR_STRINGS_SLEN10_DIR)
+	similar_strings_exp_run \
+		--batch_size 100 \
+		--sample_len 10 \
+		--random_seed 1337 \
+		--n_samples 20000 \
+		$(ROOT_DIR)/nbs/artifacts/input.txt \
+		$(SIMILAR_STRINGS_SLEN10_DIR) \
+		generate-similars \
+		--block_internals_experiment_output_folder $(BLOCK_INTERNALS_SLEN10_DIR) \
+		--block_internals_experiment_max_batch_size 10000 \
+		$(ROOT_DIR)/nbs/artifacts/shakespeare.pt \
+		proj-out \
+		--t_index 9
+	@touch $(SIMILAR_STRINGS_SLEN10_PROJ_OUTPUTS_SENTINEL)
+
+similar_strings_slen10_proj_outputs: $(SIMILAR_STRINGS_SLEN10_PROJ_OUTPUTS_SENTINEL)
+
+# -- FFWD Outputs --
+SIMILAR_STRINGS_SLEN10_FFWD_OUTPUTS_SENTINEL:=$(SIMILAR_STRINGS_SLEN10_DIR)/__ffwd_outputs_data_generated
+$(SIMILAR_STRINGS_SLEN10_FFWD_OUTPUTS_SENTINEL):
+	@echo "Generating ffwd outputs"
+	@mkdir -p $(SIMILAR_STRINGS_SLEN10_DIR)
+	similar_strings_exp_run \
+		--batch_size 100 \
+		--sample_len 10 \
+		--random_seed 1337 \
+		--n_samples 20000 \
+		$(ROOT_DIR)/nbs/artifacts/input.txt \
+		$(SIMILAR_STRINGS_SLEN10_DIR) \
+		generate-similars \
+		--block_internals_experiment_output_folder $(BLOCK_INTERNALS_SLEN10_DIR) \
+		--block_internals_experiment_max_batch_size 10000 \
+		$(ROOT_DIR)/nbs/artifacts/shakespeare.pt \
+		ffwd-out \
+		--t_index 9
+	@touch $(SIMILAR_STRINGS_SLEN10_FFWD_OUTPUTS_SENTINEL)
+
+similar_strings_slen10_ffwd_outputs: $(SIMILAR_STRINGS_SLEN10_FFWD_OUTPUTS_SENTINEL)

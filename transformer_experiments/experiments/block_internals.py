@@ -306,6 +306,50 @@ class BatchedBlockInternalsExperiment:
 
         return self.strings_from_indices(indices), values
 
+    def strings_with_topk_closest_proj_outputs(
+        self,
+        block_idx: int,
+        t_i: int,
+        queries: torch.Tensor,
+        k: int,
+        largest: bool = True,
+    ) -> Tuple[Sequence[Sequence[str]], torch.Tensor]:
+        """Returns the top k strings with the closest proj outputs
+        to the specified query."""
+        values, indices = topk_across_batches(
+            n_batches=self.n_batches,
+            batch_size=self.batch_size,
+            k=k,
+            largest=largest,
+            load_batch=lambda i: torch.load(
+                str(self._proj_output_filename(i, block_idx)), mmap=True
+            )[:, t_i, :],
+            process_batch=lambda batch: batch_distances(batch, queries=queries),
+        )
+        return self.strings_from_indices(indices), values
+
+    def strings_with_topk_closest_ffwd_outputs(
+        self,
+        block_idx: int,
+        t_i: int,
+        queries: torch.Tensor,
+        k: int,
+        largest: bool = True,
+    ) -> Tuple[Sequence[Sequence[str]], torch.Tensor]:
+        """Returns the top k strings with the closest ffwd outputs
+        to the specified query."""
+        values, indices = topk_across_batches(
+            n_batches=self.n_batches,
+            batch_size=self.batch_size,
+            k=k,
+            largest=largest,
+            load_batch=lambda i: torch.load(
+                str(self._ffwd_output_filename(i, block_idx)), mmap=True
+            )[:, t_i, :],
+            process_batch=lambda batch: batch_distances(batch, queries=queries),
+        )
+        return self.strings_from_indices(indices), values
+
     def _load_data(self, block_idx: int, get_filename: GetFilenameForBatchAndBlock):
         return torch.cat(
             [
