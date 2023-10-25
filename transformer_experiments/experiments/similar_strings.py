@@ -26,7 +26,6 @@ from transformer_experiments.datasets.tinyshakespeare import (
 from transformer_experiments.experiments.block_internals import (
     BlockInternalsExperiment,
     BatchedBlockInternalsExperiment,
-    strings_for_topk_closest_items,
 )
 from transformer_experiments.models.transformer import (
     block_size,

@@ -2,13 +2,11 @@
 
 # %% auto 0
 __all__ = ['BlockInternalsAccessors', 'BlockInternalsExperiment', 'GetFilenameForBatchAndBlock',
-           'BatchedBlockInternalsExperiment', 'strings_for_topk_closest_items', 'run',
-           'BatchedBlockInternalsExperimentSlicer', 'BlockInternalsAnalysis']
+           'BatchedBlockInternalsExperiment', 'run', 'BatchedBlockInternalsExperimentSlicer', 'BlockInternalsAnalysis']
 
 # %% ../../nbs/experiments/block-internals.ipynb 5
 from collections import defaultdict, OrderedDict
-from contextlib import contextmanager
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 import json
 import math
 from matplotlib.axes import Axes
@@ -350,52 +348,7 @@ class BatchedBlockInternalsExperiment:
         )
         return self.strings_from_indices(indices), values
 
-    def _load_data(self, block_idx: int, get_filename: GetFilenameForBatchAndBlock):
-        return torch.cat(
-            [
-                torch.load(
-                    str(get_filename(batch_idx=batch_idx, block_idx=block_idx)),
-                    mmap=True,
-                )
-                for batch_idx in range(self.n_batches)
-            ]
-        )
-
-    @contextmanager
-    def load_proj_out_data(self, block_idx: int):
-        """Loads the proj_out data for the specified block and yields
-        it."""
-        data = self._load_data(block_idx, self._proj_output_filename)
-
-        try:
-            yield data
-        finally:
-            del data
-
-    @contextmanager
-    def load_ffwd_out_data(self, block_idx: int):
-        """Loads the ffwd_out data for the specified block and yields
-        it."""
-        data = self._load_data(block_idx, self._ffwd_output_filename)
-
-        try:
-            yield data
-        finally:
-            del data
-
-# %% ../../nbs/experiments/block-internals.ipynb 17
-def strings_for_topk_closest_items(
-    data: torch.Tensor,
-    exp: BatchedBlockInternalsExperiment,
-    queries: torch.Tensor,
-    k: int,
-    largest: bool = True,
-):
-    distances = batch_distances(data, queries)
-    values, indices = torch.topk(distances, dim=0, k=k, largest=largest)
-    return exp.strings_from_indices(indices), values
-
-# %% ../../nbs/experiments/block-internals.ipynb 19
+# %% ../../nbs/experiments/block-internals.ipynb 18
 @click.command()
 @click.argument("model_weights_filename", type=click.Path(exists=True))
 @click.argument("dataset_cache_filename", type=click.Path(exists=True))
@@ -450,7 +403,7 @@ def run(
 
     exp.run()
 
-# %% ../../nbs/experiments/block-internals.ipynb 20
+# %% ../../nbs/experiments/block-internals.ipynb 19
 class BatchedBlockInternalsExperimentSlicer:
     """Companion class to BatchedBlockInternalsExperiment that "slices" the
     data files along a particular t_i dimension to make for faster loading
@@ -591,7 +544,7 @@ class BatchedBlockInternalsExperimentSlicer:
         )
         return self.exp.strings_from_indices(indices), values
 
-# %% ../../nbs/experiments/block-internals.ipynb 22
+# %% ../../nbs/experiments/block-internals.ipynb 21
 class BlockInternalsAnalysis:
     """This class performs analysis of how the next token probabilities change
     as an embedded input is passed through each of the blocks in the model"""
