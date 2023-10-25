@@ -22,6 +22,7 @@ website:
         contents:
           - experiments/block-internals.ipynb
           - experiments/logit-lens.ipynb
+          - experiments/similar-strings.ipynb
       - section: models
         contents:
           - models/transformer-helpers.ipynb
