@@ -303,6 +303,14 @@ class BatchedBlockInternalsExperiment:
 
         return self.strings_from_indices(indices), values
 
+    def _convert_t_i(self, t_i: int) -> int:
+        """Converts a negative t_i to a positive one."""
+        if t_i < 0:
+            t_i = self.sample_length() + t_i
+
+        assert t_i >= 0, f"converted t_i must be >= 0, was {t_i}"
+        return t_i
+
     def strings_with_topk_closest_proj_outputs(
         self,
         block_idx: int,
@@ -313,6 +321,8 @@ class BatchedBlockInternalsExperiment:
     ) -> Tuple[Sequence[Sequence[str]], torch.Tensor]:
         """Returns the top k strings with the closest proj outputs
         to the specified query."""
+
+        t_i = self._convert_t_i(t_i)
         values, indices = topk_across_batches(
             n_batches=self.n_batches,
             k=k,
@@ -334,6 +344,8 @@ class BatchedBlockInternalsExperiment:
     ) -> Tuple[Sequence[Sequence[str]], torch.Tensor]:
         """Returns the top k strings with the closest ffwd outputs
         to the specified query."""
+
+        t_i = self._convert_t_i(t_i)
         values, indices = topk_across_batches(
             n_batches=self.n_batches,
             k=k,
