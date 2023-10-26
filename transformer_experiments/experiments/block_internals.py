@@ -13,7 +13,17 @@ from matplotlib.axes import Axes
 import matplotlib.pyplot as plt
 from pathlib import Path
 import tempfile
-from typing import Callable, Dict, Iterable, Iterator, List, Protocol, Sequence, Tuple
+from typing import (
+    Callable,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Protocol,
+    Sequence,
+    Tuple,
+)
 
 # %% ../../nbs/experiments/block-internals.ipynb 6
 import click
@@ -254,11 +264,18 @@ class BatchedBlockInternalsExperiment:
         """Returns the index of the specified string."""
         return self.idx_map[s]
 
-    def strings_from_indices(self, indices: torch.Tensor) -> List[List[str]]:
+    def strings_from_indices(
+        self, indices: torch.Tensor, alt_all_strings: Sequence[str] = []
+    ) -> List[List[str]]:
         """Returns the strings corresponding to the specified indices.
         Indices is expected to be of shape (k, n). The returned list
         will have n elements, each of which is a list of k strings."""
         _, n = indices.shape
+
+        all_strings = self.strings
+
+        if len(alt_all_strings) > 0:
+            all_strings = alt_all_strings
 
         # We're going to return a list of lists of strings. The
         # string at index [i][j] in the returned list is the
@@ -267,7 +284,7 @@ class BatchedBlockInternalsExperiment:
 
         for ind in indices:
             for i, idx in enumerate(ind):
-                strings[i].append(self.strings[idx])
+                strings[i].append(all_strings[idx])
 
         return strings
 
@@ -311,26 +328,81 @@ class BatchedBlockInternalsExperiment:
         assert t_i >= 0, f"converted t_i must be >= 0, was {t_i}"
         return t_i
 
-    def strings_with_topk_closest_proj_outputs(
+    def _unique_substring_map(self, t_i: int) -> OrderedDict[str, int]:
+        """Returns a map of unique substrings to indices."""
+        t_i = self._convert_t_i(t_i)
+        assert (
+            t_i < self.sample_length() - 1
+        ), f"t_i must be less than {self.sample_length() - 1} to generate unique substring map, was {t_i}"
+
+        od = OrderedDict()
+        # Insert substrings in order of first appearance.
+        for i, s in enumerate(self.strings):
+            substring = s[: t_i + 1]
+            if substring not in od:
+                od[substring] = i
+        return od
+
+    def _strings_with_topk_closest_outputs(
         self,
+        get_filename: GetFilenameForBatchAndBlock,
         block_idx: int,
         t_i: int,
         queries: torch.Tensor,
         k: int,
         largest: bool = True,
     ) -> Tuple[Sequence[Sequence[str]], torch.Tensor]:
-        """Returns the top k strings with the closest proj outputs
-        to the specified query."""
+        """Returns the top k strings with the closest outputs
+        to the specified query, using the given `get_filename`
+        function to load batches of the output data."""
 
         t_i = self._convert_t_i(t_i)
 
+        all_strings = self.strings
+        unique_substring_indices: Optional[torch.Tensor] = None
+
+        # If the requested t_i is not the last character, we
+        # need to compute the unique substrings of length t_i + 1.
+        # We'll only evaluate outputs for these unique substrings.
+        if t_i < self.sample_length() - 1:
+            unique_substring_map = self._unique_substring_map(t_i)
+            all_strings = list(unique_substring_map.keys())
+
+            # The keys of the ordered dictionary are the indices into
+            # self.strings i.e. the global indices of the unique substrings.
+            unique_substring_indices = torch.tensor(list(unique_substring_map.values()))
+
         def _load_batch(batch_idx: int) -> torch.Tensor:
+            if t_i == self.sample_length() - 1:
+                # If we're looking at the last character, we can just
+                # load the batch and index it directly.
+                return torch.load(
+                    str(get_filename(batch_idx=batch_idx, block_idx=block_idx)),
+                    mmap=True,
+                )[:, t_i, :]
+
+            # Otherwise, we need to find just the unique substrings that
+            # appear in the batch and return the subset of the batch
+            # containing them.
+            assert unique_substring_indices is not None
+
+            # Find the indices of the unique substrings that appear
+            # in the batch we're asked to load.
+            mask = (unique_substring_indices >= batch_idx * self.batch_size) & (
+                unique_substring_indices < (batch_idx + 1) * self.batch_size
+            )
+            batch_indices = (
+                unique_substring_indices[torch.nonzero(mask).squeeze(dim=1)]
+                - batch_idx * self.batch_size
+            )
+            assert (
+                batch_indices.shape[0] > 0
+            ), f"batch_indices were empty for batch_idx {batch_idx}"
+
             return torch.load(
-                str(
-                    self._proj_output_filename(batch_idx=batch_idx, block_idx=block_idx)
-                ),
+                str(get_filename(batch_idx=batch_idx, block_idx=block_idx)),
                 mmap=True,
-            )[:, t_i, :]
+            )[batch_indices, t_i, :]
 
         def _process_batch(batch: torch.Tensor) -> torch.Tensor:
             return batch_distances(batch, queries=queries)
@@ -342,7 +414,26 @@ class BatchedBlockInternalsExperiment:
             load_batch=_load_batch,
             process_batch=_process_batch,
         )
-        return self.strings_from_indices(indices), values
+        return self.strings_from_indices(indices, alt_all_strings=all_strings), values
+
+    def strings_with_topk_closest_proj_outputs(
+        self,
+        block_idx: int,
+        t_i: int,
+        queries: torch.Tensor,
+        k: int,
+        largest: bool = True,
+    ) -> Tuple[Sequence[Sequence[str]], torch.Tensor]:
+        """Returns the top k strings with the closest proj outputs
+        to the specified query."""
+        return self._strings_with_topk_closest_outputs(
+            get_filename=self._proj_output_filename,
+            block_idx=block_idx,
+            t_i=t_i,
+            queries=queries,
+            k=k,
+            largest=largest,
+        )
 
     def strings_with_topk_closest_ffwd_outputs(
         self,
@@ -355,27 +446,14 @@ class BatchedBlockInternalsExperiment:
         """Returns the top k strings with the closest ffwd outputs
         to the specified query."""
 
-        t_i = self._convert_t_i(t_i)
-
-        def _load_batch(batch_idx: int) -> torch.Tensor:
-            return torch.load(
-                str(
-                    self._ffwd_output_filename(batch_idx=batch_idx, block_idx=block_idx)
-                ),
-                mmap=True,
-            )[:, t_i, :]
-
-        def _process_batch(batch: torch.Tensor) -> torch.Tensor:
-            return batch_distances(batch, queries=queries)
-
-        values, indices = topk_across_batches(
-            n_batches=self.n_batches,
+        return self._strings_with_topk_closest_outputs(
+            get_filename=self._ffwd_output_filename,
+            block_idx=block_idx,
+            t_i=t_i,
+            queries=queries,
             k=k,
             largest=largest,
-            load_batch=_load_batch,
-            process_batch=_process_batch,
         )
-        return self.strings_from_indices(indices), values
 
 # %% ../../nbs/experiments/block-internals.ipynb 18
 @click.command()
