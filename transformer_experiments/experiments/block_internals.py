@@ -293,7 +293,6 @@ class BatchedBlockInternalsExperiment:
 
         values, indices = topk_across_batches(
             n_batches=self.n_batches,
-            batch_size=self.batch_size,
             k=k,
             largest=largest,
             load_batch=lambda i: torch.load(
@@ -316,7 +315,6 @@ class BatchedBlockInternalsExperiment:
         to the specified query."""
         values, indices = topk_across_batches(
             n_batches=self.n_batches,
-            batch_size=self.batch_size,
             k=k,
             largest=largest,
             load_batch=lambda i: torch.load(
@@ -338,7 +336,6 @@ class BatchedBlockInternalsExperiment:
         to the specified query."""
         values, indices = topk_across_batches(
             n_batches=self.n_batches,
-            batch_size=self.batch_size,
             k=k,
             largest=largest,
             load_batch=lambda i: torch.load(
@@ -512,7 +509,6 @@ class BatchedBlockInternalsExperimentSlicer:
         n_queries, _ = queries.shape
         values, indices = topk_across_batches(
             n_batches=self.n_batches,
-            batch_size=self.batch_size,
             k=k,
             largest=largest,
             load_batch=lambda i: torch.load(
@@ -534,7 +530,6 @@ class BatchedBlockInternalsExperimentSlicer:
         n_queries, _ = queries.shape
         values, indices = topk_across_batches(
             n_batches=self.n_batches,
-            batch_size=self.batch_size,
             k=k,
             largest=largest,
             load_batch=lambda i: torch.load(

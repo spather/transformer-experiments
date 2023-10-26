@@ -47,7 +47,6 @@ class DataWrapper(Generic[T]):
 # %% ../../nbs/common/utils.ipynb 11
 def topk_across_batches(
     n_batches: int,
-    batch_size: int,
     k: int,
     largest: bool,
     load_batch: Callable[[int], torch.Tensor],
@@ -61,8 +60,6 @@ def topk_across_batches(
     -----------
     n_batches:
         The number of batches to process.
-    batch_size:
-        The size of each batch (the last batch may be smaller).
     k:
         The number of top values to return.
     largest:
@@ -82,6 +79,7 @@ def topk_across_batches(
     all_topk_values = []
     all_topk_indices = []
 
+    batch_sizes = []
     # Go through each batch and find the top k closest items
     # within that batch.
     for batch_idx in range(n_batches):
@@ -92,6 +90,9 @@ def topk_across_batches(
         assert (
             results.shape[0] == batch.shape[0]
         ), f"Batch had {batch.shape[0]} items, but results had {results.shape[0]} items."
+        assert batch.shape[0] >= k, f"Batch had {batch.shape[0]} items, but k was {k}."
+
+        batch_sizes.append(batch.shape[0])
 
         topk_values, topk_indices = torch.topk(results, k=k, largest=largest, dim=0)
         all_topk_values.append(topk_values)
@@ -107,6 +108,15 @@ def topk_across_batches(
 
     # Now we have to do math to translate the indices into all_topk_distances
     # into indices across all data items across all batches.
+
+    # First, calculate the cumulative sum of the batch sizes.
+    # Stick a zero at the front so that we can index into this
+    # with batch_idx and know how many items were in all the
+    # previous batches.
+    prev_batch_sums = torch.cat(
+        [torch.tensor([0]), torch.cumsum(torch.tensor(batch_sizes), dim=0)]
+    )
+
     topk_overall_indices = []
     for i in topk.indices:
         # i is the index into all_topk_distances. First, let's figure
@@ -120,6 +130,8 @@ def topk_across_batches(
             all_topk_indices_tensor, dim=0, index=i.unsqueeze(0)
         ).squeeze(0)
 
-        topk_overall_indices.append(batch_idx * batch_size + index_within_batch)
+        # The overall index is the sum of the number of items in all
+        # previous batches, plus the index within the current batch.
+        topk_overall_indices.append(prev_batch_sums[batch_idx] + index_within_batch)
 
     return topk_overall_values, torch.stack(topk_overall_indices)
