@@ -20,6 +20,7 @@ from tqdm.auto import tqdm
 
 # %% ../../nbs/experiments/similar-strings.ipynb 7
 from ..common.substring_generator import all_unique_substrings
+from ..common.utils import topk_across_batches
 from transformer_experiments.datasets.tinyshakespeare import (
     TinyShakespeareDataSet,
 )
@@ -61,7 +62,71 @@ class SimilarStringsResult:
         default_factory=lambda: [{} for _ in range(n_layer)]
     )
 
-# %% ../../nbs/experiments/similar-strings.ipynb 11
+    def aggregate_over_t_is(self, t_is: Sequence[int]):
+        # Convert any negative t_is to positive.
+        t_is = [t_i if t_i >= 0 else len(self.s) + t_i for t_i in t_is]
+        assert all([0 <= t_i < len(self.s) for t_i in t_is]), "Invalid t_is"
+
+        assert all(
+            [
+                t_i in self.proj_out[block_idx].keys()
+                for t_i in t_is
+                for block_idx in range(n_layer)
+            ]
+        ), "Not all t_is are in the proj_out results"
+        assert all(
+            [
+                t_i in self.ffwd_out[block_idx].keys()
+                for t_i in t_is
+                for block_idx in range(n_layer)
+            ]
+        ), "Not all t_is are in the proj_out results"
+
+        aggr_proj_out: List[SimilarStringsData] = []
+        aggr_ffwd_out: List[SimilarStringsData] = []
+
+        k = len(next(iter(self.proj_out[0].values())).sim_strings)
+
+        for block_idx in range(n_layer):
+            # Find the smallest distances across all t_is for proj_outs this block
+            distances, indices = topk_across_batches(
+                n_batches=len(t_is),
+                k=k,
+                largest=False,
+                load_batch=lambda batch_idx: self.proj_out[block_idx][
+                    t_is[batch_idx]
+                ].distances,
+                process_batch=lambda batch: batch,
+            )
+
+            # Find the corresponding strings
+            sim_strings = []
+            for i in indices:
+                t_i = t_is[i // k]
+                sim_strings.append(self.proj_out[block_idx][t_i].sim_strings[i % k])
+            aggr_proj_out.append(SimilarStringsData(sim_strings, distances))
+
+            # Find the smallest distances across all t_is for ffwd_outs this block
+            distances, indices = topk_across_batches(
+                n_batches=len(t_is),
+                k=k,
+                largest=False,
+                load_batch=lambda batch_idx: self.ffwd_out[block_idx][
+                    t_is[batch_idx]
+                ].distances,
+                process_batch=lambda batch: batch,
+            )
+
+            # Find the corresponding strings
+            sim_strings = []
+            for i in indices:
+                t_i = t_is[i // k]
+                sim_strings.append(self.ffwd_out[block_idx][t_i].sim_strings[i % k])
+            aggr_ffwd_out.append(SimilarStringsData(sim_strings, distances))
+
+        return aggr_proj_out, aggr_ffwd_out
+
+# %% ../../nbs/experiments/similar-strings.ipynb 12
 class SimilarStringsExperiment:
     def __init__(
         self,
@@ -329,7 +394,7 @@ class SimilarStringsExperiment:
 
         return string_to_results
 
-# %% ../../nbs/experiments/similar-strings.ipynb 14
+# %% ../../nbs/experiments/similar-strings.ipynb 15
 # CLI for generating similar strings files
 @click.group()
 @click.argument("dataset_cache_filename", type=click.Path(exists=True))
