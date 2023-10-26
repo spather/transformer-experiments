@@ -181,7 +181,8 @@ class SimilarStringsExperiment:
                 sim_strings, distances = exp.strings_with_topk_closest_proj_outputs(
                     block_idx=block_idx,
                     t_i=t_i,
-                    queries=batch_exp.proj_output(block_idx)[:, t_i, :],
+                    # Query is always the last token - for something else, use a shorter string
+                    queries=batch_exp.proj_output(block_idx)[:, -1, :],
                     k=n_similars,
                     largest=False,
                 )
@@ -228,7 +229,8 @@ class SimilarStringsExperiment:
                 sim_strings, distances = exp.strings_with_topk_closest_ffwd_outputs(
                     block_idx=block_idx,
                     t_i=t_i,
-                    queries=batch_exp.ffwd_output(block_idx)[:, t_i, :],
+                    # Query is always the last token - for something else, use a shorter string
+                    queries=batch_exp.ffwd_output(block_idx)[:, -1, :],
                     k=n_similars,
                     largest=False,
                 )
@@ -255,9 +257,19 @@ class SimilarStringsExperiment:
 
         self.string_to_batch_map = self._load_json(self._string_to_batch_map_filename())
 
-    def load_results_for_strings(self, strings: Sequence[str]):
+    def load_results_for_strings(
+        self, strings: Sequence[str], load_t_is: Sequence[int] = [-1]
+    ):
         self.load_string_to_batch_map()
         assert self.string_to_batch_map is not None
+
+        sample_len = len(next(iter(self.string_to_batch_map.keys())))
+        # Convert any negative t_is to positive.
+        load_t_is = [t_i if t_i >= 0 else sample_len + t_i for t_i in load_t_is]
+
+        assert all(
+            0 <= t_i < sample_len for t_i in load_t_is
+        ), f"all t_is must be in [0, {sample_len}), were {load_t_is}"
 
         batch_to_strings: Dict[int, List[str]] = defaultdict(list)
         for s in strings:
@@ -277,11 +289,8 @@ class SimilarStringsExperiment:
                 emb_data = SimilarStringsData(sim_strings, distances)
                 string_to_results[s] = SimilarStringsResult(s, emb_data)
 
-            valid_t_is = [
-                len(s) - 1
-            ]  # TODO: eventually this should loop over the whole string
             for block_idx in range(n_layer):
-                for t_i in valid_t_is:
+                for t_i in load_t_is:
                     proj_batch = self._load_json(
                         self._proj_out_sim_strings_filename(
                             batch_idx=batch_idx, block_idx=block_idx, t_i=t_i
