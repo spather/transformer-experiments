@@ -323,14 +323,24 @@ class BatchedBlockInternalsExperiment:
         to the specified query."""
 
         t_i = self._convert_t_i(t_i)
+
+        def _load_batch(batch_idx: int) -> torch.Tensor:
+            return torch.load(
+                str(
+                    self._proj_output_filename(batch_idx=batch_idx, block_idx=block_idx)
+                ),
+                mmap=True,
+            )[:, t_i, :]
+
+        def _process_batch(batch: torch.Tensor) -> torch.Tensor:
+            return batch_distances(batch, queries=queries)
+
         values, indices = topk_across_batches(
             n_batches=self.n_batches,
             k=k,
             largest=largest,
-            load_batch=lambda i: torch.load(
-                str(self._proj_output_filename(i, block_idx)), mmap=True
-            )[:, t_i, :],
-            process_batch=lambda batch: batch_distances(batch, queries=queries),
+            load_batch=_load_batch,
+            process_batch=_process_batch,
         )
         return self.strings_from_indices(indices), values
 
@@ -346,14 +356,24 @@ class BatchedBlockInternalsExperiment:
         to the specified query."""
 
         t_i = self._convert_t_i(t_i)
+
+        def _load_batch(batch_idx: int) -> torch.Tensor:
+            return torch.load(
+                str(
+                    self._ffwd_output_filename(batch_idx=batch_idx, block_idx=block_idx)
+                ),
+                mmap=True,
+            )[:, t_i, :]
+
+        def _process_batch(batch: torch.Tensor) -> torch.Tensor:
+            return batch_distances(batch, queries=queries)
+
         values, indices = topk_across_batches(
             n_batches=self.n_batches,
             k=k,
             largest=largest,
-            load_batch=lambda i: torch.load(
-                str(self._ffwd_output_filename(i, block_idx)), mmap=True
-            )[:, t_i, :],
-            process_batch=lambda batch: batch_distances(batch, queries=queries),
+            load_batch=_load_batch,
+            process_batch=_process_batch,
         )
         return self.strings_from_indices(indices), values
 
