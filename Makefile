@@ -235,7 +235,7 @@ $(SIMILAR_STRINGS_SLEN10_EMBEDDINGS_SENTINEL):
 similar_strings_slen10_embeddings: $(SIMILAR_STRINGS_SLEN10_EMBEDDINGS_SENTINEL)
 
 # -- Proj Outputs --
-T_INDICES := 5 9
+T_INDICES := 4 5 9
 
 similar_strings_slen10_proj_outputs: $(patsubst %, similar_strings_slen10_proj_outputs_%, $(T_INDICES))
 
