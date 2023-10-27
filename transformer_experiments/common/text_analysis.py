@@ -51,7 +51,6 @@ class SubstringFrequencyAnalysis:
         # Need at least one string to determine the length
         # and for this to be useful.
         assert len(substrs) > 0
-        assert len(substrs[0]) == len(next(iter(next_token_map.keys())))
 
         self.freq_map = {s: next_token_map[s] for s in substrs}
 
@@ -80,7 +79,7 @@ class SubstringFrequencyAnalysis:
         )
 
         print("Top Tokens for each substring:")
-        s_len = len(next(iter(self.freq_map.keys())))
+        s_len = max([len(s) for s in self.freq_map.keys()])
         for s, tokens in self.top_tokens.items():
             print(
                 f"{repr(s):>{2*s_len+2}}: {', '.join([f'{repr(token):>4} ({freq:>4})' for token, freq in tokens])}"
