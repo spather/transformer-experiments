@@ -16,7 +16,7 @@ def build_next_token_map(
 ) -> Dict[str, torch.Tensor]:
     """For a given body of text, build a map of all prefixes of a given
     length to the frequencies of the next token."""
-    next_token_map: Dict[str, torch.Tensor] = defaultdict(
+    next_token_map: defaultdict[str, torch.Tensor] = defaultdict(
         lambda: torch.zeros(vocab_size, dtype=torch.long)
     )
 
@@ -39,6 +39,11 @@ def build_next_token_map(
     # will added it (via the defaultdict's default factory) if it
     # doesn't.
     next_token_map[last_prefix] += 0
+
+    # Set the default factory to None so that if they caller
+    # tries to access a prefix that isn't in the map, they get
+    # a KeyError rather than a new entry being added.
+    next_token_map.default_factory = None
 
     return next_token_map
 
