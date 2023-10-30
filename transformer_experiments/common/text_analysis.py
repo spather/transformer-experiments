@@ -27,6 +27,19 @@ def build_next_token_map(
         next_token = text[i + prefix_len]
         next_token_map[prefix][stoi[next_token]] += 1
 
+    # The loop above will have added every substring of length
+    # `prefx_len` to the map, except for the very last one,
+    # because it has no next token. But, it is useful to have
+    # this last string in the map, with zeros for all the next
+    # token counts (it is a valid substring of the right length
+    # and calling code might want to look it up). We add it here.
+    last_prefix = text[-prefix_len:]
+
+    # Adding zero ensures the entry is unchanged if it exists, but
+    # will added it (via the defaultdict's default factory) if it
+    # doesn't.
+    next_token_map[last_prefix] += 0
+
     return next_token_map
 
 # %% ../../nbs/common/text-analysis.ipynb 8
