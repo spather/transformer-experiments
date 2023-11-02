@@ -27,6 +27,9 @@ from transformer_experiments.datasets.tinyshakespeare import (
 from transformer_experiments.experiments.block_internals import (
     BlockInternalsExperiment,
     BatchedBlockInternalsExperiment,
+    batch_cosine_sim,
+    batch_distances,
+    DistanceFunction,
 )
 from transformer_experiments.models.transformer import (
     block_size,
@@ -226,6 +229,8 @@ class SimilarStringsExperiment:
         batch_size: int = 100,
         disable_progress_bars: bool = False,
         n_similars: int = 10,
+        largest: bool = False,
+        distance_function: DistanceFunction = batch_distances,
     ):
         filename_t_i = t_i
         if filename_t_i < 0:
@@ -251,7 +256,8 @@ class SimilarStringsExperiment:
                     # Query is always the last token - for something else, use a shorter string
                     queries=batch_exp.proj_output(block_idx)[:, -1, :],
                     k=n_similars,
-                    largest=False,
+                    largest=largest,
+                    distance_function=distance_function,
                 )
                 self._proj_out_sim_strings_filename(
                     batch_idx, block_idx, filename_t_i
@@ -275,6 +281,8 @@ class SimilarStringsExperiment:
         batch_size: int = 100,
         disable_progress_bars: bool = False,
         n_similars: int = 10,
+        largest: bool = False,
+        distance_function: DistanceFunction = batch_distances,
     ):
         n_batches = math.ceil(len(strings) / batch_size)
 
@@ -299,7 +307,8 @@ class SimilarStringsExperiment:
                     # Query is always the last token - for something else, use a shorter string
                     queries=batch_exp.ffwd_output(block_idx)[:, -1, :],
                     k=n_similars,
-                    largest=False,
+                    largest=largest,
+                    distance_function=distance_function,
                 )
 
                 self._ffwd_out_sim_strings_filename(
@@ -511,6 +520,13 @@ def generate_string_to_batch_map(ctx: click.Context):
     type=click.IntRange(min=1),
     default=10,
 )
+@click.option(
+    "-d",
+    "--distance_function",
+    required=False,
+    type=click.Choice(["cosine", "euclidean"], case_sensitive=False),
+    default="euclidean",
+)
 @click.pass_context
 def generate_similars(
     ctx: click.Context,
@@ -518,6 +534,7 @@ def generate_similars(
     block_internals_experiment_output_folder: str,
     block_internals_experiment_max_batch_size: int,
     n_similars: int,
+    distance_function: str,
 ):
     click.echo("Generation parameters:")
 
@@ -535,7 +552,18 @@ def generate_similars(
     click.echo(f"  n similars: {n_similars}")
     click.echo()
 
+    click.echo(f"  distance function: {distance_function}")
+    click.echo()
+
     ctx.obj["n_similars"] = n_similars
+
+    assert distance_function in ["cosine", "euclidean"]
+    if distance_function == "cosine":
+        ctx.obj["distance_function"] = batch_cosine_sim
+        ctx.obj["largest"] = True
+    elif distance_function == "euclidean":
+        ctx.obj["distance_function"] = batch_distances
+        ctx.obj["largest"] = False
 
     # Instantiate the model, tokenizer, and dataset
     device: str = ctx.obj["device"]
@@ -605,6 +633,8 @@ def proj_out(ctx: click.Context, t_index: int):
         ctx.obj["exp"],
         batch_size=ctx.obj["batch_size"],
         n_similars=ctx.obj["n_similars"],
+        largest=ctx.obj["largest"],
+        distance_function=ctx.obj["distance_function"],
     )
 
     click.echo("Generated proj_out similar strings files.")
@@ -638,6 +668,8 @@ def ffwd_out(ctx: click.Context, t_index: int):
         ctx.obj["exp"],
         batch_size=ctx.obj["batch_size"],
         n_similars=ctx.obj["n_similars"],
+        largest=ctx.obj["largest"],
+        distance_function=ctx.obj["distance_function"],
     )
 
     click.echo("Generated ffwd_out similar strings files.")

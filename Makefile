@@ -285,3 +285,59 @@ $(SIMILAR_STRINGS_SLEN10_DIR)/__ffwd_outputs_data_generated_t%:
 		ffwd-out \
 		--t_index $(T_INDEX)
 	@touch $@
+
+# -- Proj Outputs (Cosine)--
+SIMILAR_STRINGS_SLEN10_COS_DIR:=$(BLOCK_INTERNALS_SLEN10_DIR)/similar_strings_cos
+
+T_INDICES := 7 8 9
+
+similar_strings_slen10_proj_outputs_cos: $(patsubst %, similar_strings_slen10_proj_outputs_cos_%, $(T_INDICES))
+
+$(patsubst %, similar_strings_slen10_proj_outputs_cos_%, $(T_INDICES)): similar_strings_slen10_proj_outputs_cos_%: $(SIMILAR_STRINGS_SLEN10_COS_DIR)/__proj_outputs_cos_data_generated_t%
+
+similar_strings_slen10_proj_outputs_cos_%: T_INDEX=$*
+
+$(SIMILAR_STRINGS_SLEN10_COS_DIR)/__proj_outputs_cos_data_generated_t%:
+	@echo "Generating proj outputs for t_index=$(T_INDEX)"
+	@mkdir -p $(SIMILAR_STRINGS_SLEN10_COS_DIR)
+	similar_strings_exp_run \
+		--batch_size 100 \
+		--sample_len 10 \
+		--random_seed 1337 \
+		--n_samples 20000 \
+		$(ROOT_DIR)/nbs/artifacts/input.txt \
+		$(SIMILAR_STRINGS_SLEN10_COS_DIR) \
+		generate-similars \
+		--block_internals_experiment_output_folder $(BLOCK_INTERNALS_SLEN10_DIR) \
+		--block_internals_experiment_max_batch_size 10000 \
+		--distance_function cosine \
+		$(ROOT_DIR)/nbs/artifacts/shakespeare.pt \
+		proj-out \
+		--t_index $(T_INDEX)
+	@touch $@
+
+# -- FFWD Outputs (Cosine) --
+similar_strings_slen10_ffwd_outputs_cos: $(patsubst %, similar_strings_slen10_ffwd_outputs_cos_%, $(T_INDICES))
+
+$(patsubst %, similar_strings_slen10_ffwd_outputs_cos_%, $(T_INDICES)): similar_strings_slen10_ffwd_outputs_cos_%: $(SIMILAR_STRINGS_SLEN10_COS_DIR)/__ffwd_outputs_cos_data_generated_t%
+
+similar_strings_slen10_ffwd_outputs_cos_%: T_INDEX=$*
+
+$(SIMILAR_STRINGS_SLEN10_COS_DIR)/__ffwd_outputs_cos_data_generated_t%:
+	@echo "Generating ffwd outputs for t_index=$(T_INDEX)"
+	@mkdir -p $(SIMILAR_STRINGS_SLEN10_COS_DIR)
+	similar_strings_exp_run \
+		--batch_size 100 \
+		--sample_len 10 \
+		--random_seed 1337 \
+		--n_samples 20000 \
+		$(ROOT_DIR)/nbs/artifacts/input.txt \
+		$(SIMILAR_STRINGS_SLEN10_COS_DIR) \
+		generate-similars \
+		--block_internals_experiment_output_folder $(BLOCK_INTERNALS_SLEN10_DIR) \
+		--block_internals_experiment_max_batch_size 10000 \
+		--distance_function cosine \
+		$(ROOT_DIR)/nbs/artifacts/shakespeare.pt \
+		ffwd-out \
+		--t_index $(T_INDEX)
+	@touch $@
