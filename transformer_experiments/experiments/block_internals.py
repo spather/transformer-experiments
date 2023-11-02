@@ -317,7 +317,7 @@ class BatchedBlockInternalsExperiment:
         self,
         queries: torch.Tensor,
         k: int,
-        largest: bool = True,
+        largest: bool = False,
     ) -> Tuple[Sequence[Sequence[str]], torch.Tensor]:
         """Returns the top k strings with the closest embeddings
         to the specified query."""
