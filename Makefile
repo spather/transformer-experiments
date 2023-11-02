@@ -286,9 +286,49 @@ $(SIMILAR_STRINGS_SLEN10_DIR)/__ffwd_outputs_data_generated_t%:
 		--t_index $(T_INDEX)
 	@touch $@
 
-# -- Proj Outputs (Cosine)--
+# -- String to batch map (Cosine) --
 SIMILAR_STRINGS_SLEN10_COS_DIR:=$(BLOCK_INTERNALS_SLEN10_DIR)/similar_strings_cos
 
+SIMILAR_STRINGS_SLEN10_MAP_COS_SENTINEL:=$(SIMILAR_STRINGS_SLEN10_COS_DIR)/__map_cos_data_generated
+$(SIMILAR_STRINGS_SLEN10_MAP_COS_SENTINEL):
+	@echo "Generating strings to batch map"
+	@mkdir -p $(SIMILAR_STRINGS_SLEN10_COS_DIR)
+	similar_strings_exp_run \
+		--batch_size 100 \
+		--sample_len 10 \
+		--random_seed 1337 \
+		--n_samples 20000 \
+		$(ROOT_DIR)/nbs/artifacts/input.txt \
+		$(SIMILAR_STRINGS_SLEN10_COS_DIR) \
+		generate-string-to-batch-map
+	@touch $@
+
+similar_strings_slen10_map_cos: $(SIMILAR_STRINGS_SLEN10_MAP_COS_SENTINEL)
+
+# -- Embeddings (Cosine) --
+
+SIMILAR_STRINGS_SLEN10_EMBEDDINGS_COS_SENTINEL:=$(SIMILAR_STRINGS_SLEN10_COS_DIR)/__embeddings_cos_data_generated
+$(SIMILAR_STRINGS_SLEN10_EMBEDDINGS_COS_SENTINEL):
+	@echo "Generating embeddings"
+	@mkdir -p $(SIMILAR_STRINGS_SLEN10_COS_DIR)
+	similar_strings_exp_run \
+		--batch_size 100 \
+		--sample_len 10 \
+		--random_seed 1337 \
+		--n_samples 20000 \
+		$(ROOT_DIR)/nbs/artifacts/input.txt \
+		$(SIMILAR_STRINGS_SLEN10_COS_DIR) \
+		generate-similars \
+		--block_internals_experiment_output_folder $(BLOCK_INTERNALS_SLEN10_DIR) \
+		--block_internals_experiment_max_batch_size 10000 \
+		--distance_function cosine \
+		$(ROOT_DIR)/nbs/artifacts/shakespeare.pt \
+		embeddings
+	@touch $@
+
+similar_strings_slen10_embeddings_cos: $(SIMILAR_STRINGS_SLEN10_EMBEDDINGS_COS_SENTINEL)
+
+# -- Proj Outputs (Cosine)--
 T_INDICES := 7 8 9
 
 similar_strings_slen10_proj_outputs_cos: $(patsubst %, similar_strings_slen10_proj_outputs_cos_%, $(T_INDICES))

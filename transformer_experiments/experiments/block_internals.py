@@ -318,6 +318,7 @@ class BatchedBlockInternalsExperiment:
         queries: torch.Tensor,
         k: int,
         largest: bool = False,
+        distance_function: DistanceFunction = batch_distances,
     ) -> Tuple[Sequence[Sequence[str]], torch.Tensor]:
         """Returns the top k strings with the closest embeddings
         to the specified query."""
@@ -331,7 +332,9 @@ class BatchedBlockInternalsExperiment:
             # reshape both the batch and queries to eliminate the
             # s_len dimension, effectively concatenating all the
             # embedding tensors across positions.
-            return batch_distances(batch.reshape(B, -1), queries.reshape(n_queries, -1))
+            return distance_function(
+                batch.reshape(B, -1), queries.reshape(n_queries, -1)
+            )
 
         values, indices = topk_across_batches(
             n_batches=self.n_batches,

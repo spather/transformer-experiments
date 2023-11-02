@@ -192,6 +192,8 @@ class SimilarStringsExperiment:
         batch_size: int = 100,
         disable_progress_bars: bool = False,
         n_similars: int = 10,
+        largest: bool = False,
+        distance_function: DistanceFunction = batch_distances,
     ):
         n_batches = math.ceil(len(strings) / batch_size)
 
@@ -206,7 +208,10 @@ class SimilarStringsExperiment:
 
             # Compute the embedding similar strings
             sim_strings, distances = exp.strings_with_topk_closest_embeddings(
-                queries=batch_exp.embeddings, k=n_similars, largest=False
+                queries=batch_exp.embeddings,
+                k=n_similars,
+                largest=largest,
+                distance_function=distance_function,
             )
 
             self._embs_sim_strings_filename(batch_idx).write_text(
@@ -600,6 +605,8 @@ def embeddings(ctx: click.Context):
         ctx.obj["exp"],
         batch_size=ctx.obj["batch_size"],
         n_similars=ctx.obj["n_similars"],
+        largest=ctx.obj["largest"],
+        distance_function=ctx.obj["distance_function"],
     )
 
     click.echo("Generated embeddings similar strings files.")
