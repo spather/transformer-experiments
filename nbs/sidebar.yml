@@ -6,6 +6,8 @@ website:
         contents:
           - analyses/00_introduction.ipynb
           - analyses/10_clustering_block_intermediates.ipynb
+          - analyses/20_cosine_sim_intermediates.ipynb
+          - analyses/30_similar_strings_deep_dive.ipynb
       - section: blog_posts
         contents:
           - blog_posts/block_internals.ipynb
