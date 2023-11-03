@@ -65,7 +65,7 @@ class SimilarStringsResult:
         default_factory=lambda: [{} for _ in range(n_layer)]
     )
 
-    def aggregate_over_t_is(self, t_is: Sequence[int]):
+    def aggregate_over_t_is(self, t_is: Sequence[int], largest: bool = False):
         # Convert any negative t_is to positive.
         t_is = [t_i if t_i >= 0 else len(self.s) + t_i for t_i in t_is]
         assert all([0 <= t_i < len(self.s) for t_i in t_is]), "Invalid t_is"
@@ -95,7 +95,7 @@ class SimilarStringsResult:
             distances, indices = topk_across_batches(
                 n_batches=len(t_is),
                 k=k,
-                largest=False,
+                largest=largest,
                 load_batch=lambda batch_idx: self.proj_out[block_idx][
                     t_is[batch_idx]
                 ].distances,
@@ -113,7 +113,7 @@ class SimilarStringsResult:
             distances, indices = topk_across_batches(
                 n_batches=len(t_is),
                 k=k,
-                largest=False,
+                largest=largest,
                 load_batch=lambda batch_idx: self.ffwd_out[block_idx][
                     t_is[batch_idx]
                 ].distances,
