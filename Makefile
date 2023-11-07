@@ -52,6 +52,7 @@ no_fastcore_import_in_lib:
 
 # Data Sets
 
+
 # ====== Block Internals ======
 BLOCK_INTERNALS_DATA_DIR:=$(ROOT_DIR)/nbs/artifacts/block_internals_results/large_files
 
@@ -71,6 +72,25 @@ $(BLOCK_INTERNALS_SLEN10_SENTINEL):
 	@touch $(BLOCK_INTERNALS_SLEN10_SENTINEL)
 
 block_internals_slen10_dataset: $(BLOCK_INTERNALS_SLEN10_SENTINEL)
+
+
+# ====== Final FFWD ======
+FINAL_FFWD_SLEN256_DIR:=$(BLOCK_INTERNALS_DATA_DIR)/slen256
+FINAL_FFWD_SLEN256_SENTINEL:=$(FINAL_FFWD_SLEN256_DIR)/__data_generated
+
+$(FINAL_FFWD_SLEN256_SENTINEL):
+	@echo "Generating final ffwd slen256 data set"
+	@mkdir -p $(FINAL_FFWD_SLEN256_DIR)
+	final_ffwd_exp_run \
+		$(ROOT_DIR)/nbs/artifacts/shakespeare.pt \
+		$(ROOT_DIR)/nbs/artifacts/input.txt \
+		$(FINAL_FFWD_SLEN256_DIR) \
+		--sample_len 256 \
+		--max_batch_size 400
+	@touch $@
+
+final_ffwd_slen256_dataset: $(FINAL_FFWD_SLEN256_SENTINEL)
+
 
 # ====== Similar Strings ======
 SIMILAR_STRINGS_SLEN10_DIR:=$(BLOCK_INTERNALS_SLEN10_DIR)/similar_strings
