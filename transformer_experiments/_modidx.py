@@ -308,4 +308,12 @@ d = { 'settings': { 'branch': 'master',
                                                                    'transformer_experiments.tokenizers.char_tokenizer.CharacterTokenizer.encode': ( 'tokenizers/char-tokenizer.html#charactertokenizer.encode',
                                                                                                                                                     'transformer_experiments/tokenizers/char_tokenizer.py')},
             'transformer_experiments.trained_models.tinyshakespeare_transformer': { 'transformer_experiments.trained_models.tinyshakespeare_transformer.create_model_and_tokenizer': ( 'trained_models/tinyshakespeare-transformer.html#create_model_and_tokenizer',
-                                                                                                                                                                                       'transformer_experiments/trained_models/tinyshakespeare_transformer.py')}}}
+                                                                                                                                                                                       'transformer_experiments/trained_models/tinyshakespeare_transformer.py')},
+            'transformer_experiments.training_utils': { 'transformer_experiments.training_utils.CheckPointer': ( 'training/training-utils.html#checkpointer',
+                                                                                                                 'transformer_experiments/training_utils.py'),
+                                                        'transformer_experiments.training_utils.CheckPointer.__init__': ( 'training/training-utils.html#checkpointer.__init__',
+                                                                                                                          'transformer_experiments/training_utils.py'),
+                                                        'transformer_experiments.training_utils.CheckPointer.filename': ( 'training/training-utils.html#checkpointer.filename',
+                                                                                                                          'transformer_experiments/training_utils.py'),
+                                                        'transformer_experiments.training_utils.CheckPointer.save_checkpoint': ( 'training/training-utils.html#checkpointer.save_checkpoint',
+                                                                                                                                 'transformer_experiments/training_utils.py')}}}

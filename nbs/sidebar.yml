@@ -40,3 +40,4 @@ website:
       - section: training
         contents:
           - training/dataset-split.ipynb
+          - training/training-utils.ipynb
