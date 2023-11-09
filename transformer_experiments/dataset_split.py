@@ -16,9 +16,9 @@ from transformer_experiments.tokenizers.char_tokenizer import (
 
 # %% ../nbs/training/dataset-split.ipynb 7
 def split_text_dataset(
-    text: str, tokenizer: CharacterTokenizer, train_pct: float
+    text: str, tokenizer: CharacterTokenizer, train_pct: float, device: str
 ) -> Tuple[torch.Tensor, torch.Tensor]:
-    data = torch.tensor(tokenizer.encode(text), dtype=torch.long)
+    data = torch.tensor(tokenizer.encode(text), dtype=torch.long, device=device)
     n = int(train_pct * len(data))
     train_data = data[:n]
     val_data = data[n:]
