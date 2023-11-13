@@ -1,1 +1,2 @@
-training_checkpoints/
+**/training_checkpoints/
+**/batch_histories/
