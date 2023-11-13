@@ -64,7 +64,7 @@ $(BLOCK_INTERNALS_SLEN10_SENTINEL):
 	@echo "Generating block internals slen10 data set"
 	@mkdir -p $(BLOCK_INTERNALS_SLEN10_DIR)
 	block_internals_exp_run \
-		$(ROOT_DIR)/nbs/artifacts/shakespeare-20231109.pt \
+		$(ROOT_DIR)/nbs/artifacts/shakespeare-20231112.pt \
 		$(ROOT_DIR)/nbs/artifacts/input.txt \
 		$(BLOCK_INTERNALS_SLEN10_DIR) \
 		--sample_len 10 \
