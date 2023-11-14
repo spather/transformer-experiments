@@ -46,7 +46,7 @@ sudo apt-get install git-lfs
 (
   cd "${ROOT}"
   git lfs install
-  git lfs pull --include "${ROOT}/nbs/artifacts/shakespeare-20231112.pt"
+  git lfs pull --include "nbs/artifacts/shakespeare-20231112.pt"
 )
 
 # install quarto
