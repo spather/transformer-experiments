@@ -38,7 +38,6 @@ pip install -r "${ROOT}/requirements.dev.linux.txt"
   pip install -e ".[dev]"
 )
 
-
 # install ipykernel
 python3 -m ipykernel install --user --name transformer-experiments --display-name "Python (transformer-experiments)"
 
