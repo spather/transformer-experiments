@@ -4,6 +4,7 @@
 __all__ = ['environment', 'CosineSimilaritiesExperiment', 'get_ffwd_queries', 'run']
 
 # %% ../../nbs/experiments/cosine-sims.ipynb 5
+import gc
 import math
 from pathlib import Path
 import tempfile
@@ -96,6 +97,10 @@ class CosineSimilaritiesExperiment:
             )
 
             torch.save(sims, self.cosine_sim_ffwd_out_filename(batch_idx))
+            del ffwd_outs
+            del sims
+            torch.cuda.empty_cache()
+            gc.collect()
 
     def _get_ffwd_outs(self, batch_strings: Sequence[str]) -> torch.Tensor:
         tokens = self.encoding_helpers.tokenize_strings(batch_strings)
@@ -105,7 +110,7 @@ class CosineSimilaritiesExperiment:
 
         ffwd_outs = torch.stack(
             [
-                io_accessors[block_idx].output("ffwd")[:, -1, :]
+                io_accessors[block_idx].output("ffwd")[:, -1, :].clone()
                 for block_idx in range(n_layer)
             ]
         )

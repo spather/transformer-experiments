@@ -37,7 +37,7 @@ def get_environment() -> Environment:
     elif is_running_in_paperspace():
         return Environment(
             name="paperspace",
-            code_root=Path("./code/transformer-experiments/").resolve(),
+            code_root=Path("/notebooks/code/transformer-experiments/"),
             data_root=Path("/storage/"),
         )
     else:
