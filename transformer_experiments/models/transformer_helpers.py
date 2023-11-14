@@ -135,6 +135,7 @@ class TransformerAccessors:
         """
         block = self.m.blocks[block_idx]
         new_block = Block(n_embed, n_head)
+        new_block.to(self.device)
         new_block.load_state_dict(block.state_dict())
         new_block.eval()
 
