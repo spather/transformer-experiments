@@ -590,7 +590,7 @@ class BlockInternalsAnalysis:
             (1 + 2 * n_layer, tokenizer.vocab_size), dtype=torch.float32
         )
         self.data[0] = LogitsWrapper(
-            self.accessors.logits_from_embedding(x), tokenizer
+            self.accessors.logits_from_embedding(x).cpu(), tokenizer
         ).probs()[0, -1]
         self.row_labels = ["Input"]
         for block_idx, io_accessor in enumerate(io_accessors):
@@ -606,7 +606,8 @@ class BlockInternalsAnalysis:
             # and ffwd_adjusted_logits simulates the second line.
 
             sa_adjusted_logits = LogitsWrapper(
-                self.accessors.logits_from_embedding(block_input + sa_output), tokenizer
+                self.accessors.logits_from_embedding(block_input + sa_output).cpu(),
+                tokenizer,
             )
             self.data[self.idx_sa_probs(block_idx)] = sa_adjusted_logits.probs()[0, -1]
             self.row_labels.append(f"Block {block_idx} after SA")
@@ -614,7 +615,7 @@ class BlockInternalsAnalysis:
             ffwd_adjusted_logits = LogitsWrapper(
                 self.accessors.logits_from_embedding(
                     block_input + sa_output + ffwd_output
-                ),
+                ).cpu(),
                 tokenizer,
             )
             self.data[self.idx_ffwd_probs(block_idx)] = ffwd_adjusted_logits.probs()[

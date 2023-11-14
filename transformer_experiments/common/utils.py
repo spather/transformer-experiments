@@ -114,7 +114,12 @@ def topk_across_batches(
     # with batch_idx and know how many items were in all the
     # previous batches.
     prev_batch_sums = torch.cat(
-        [torch.tensor([0]), torch.cumsum(torch.tensor(batch_sizes), dim=0)]
+        [
+            torch.tensor([0], device=all_topk_values_tensor.device),
+            torch.cumsum(
+                torch.tensor(batch_sizes, device=all_topk_values_tensor.device), dim=0
+            ),
+        ]
     )
 
     topk_overall_indices = []
