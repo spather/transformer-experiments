@@ -73,6 +73,27 @@ $(BLOCK_INTERNALS_SLEN10_SENTINEL):
 
 block_internals_slen10_dataset: $(BLOCK_INTERNALS_SLEN10_SENTINEL)
 
+# ====== Cosine Sims ======
+COSINE_SIMS_DATA_DIR:=$(ROOT_DIR)/nbs/artifacts/cosine_sim_results/large_files
+
+# -- Sample Length 10 --
+COSINE_SIMS_SLEN10_DIR:=$(COSINE_SIMS_DATA_DIR)/slen10
+COSINE_SIMS_SLEN10_SENTINEL:=$(COSINE_SIMS_SLEN10_DIR)/__data_generated
+
+$(COSINE_SIMS_SLEN10_SENTINEL):
+	@echo "Generating cosine sims slen10 data set"
+	@mkdir -p $(COSINE_SIMS_SLEN10_DIR)
+	cosine_sims_exp_run \
+		$(ROOT_DIR)/nbs/artifacts/shakespeare-20231112.pt \
+		$(ROOT_DIR)/nbs/artifacts/input.txt \
+		$(COSINE_SIMS_SLEN10_DIR) \
+		--string_len 10 \
+		--max_batch_size 100 \
+		--num_queries 20000 \
+		--random_seed 1337
+	@touch $@
+
+cosine_sims_slen10_dataset: $(COSINE_SIMS_SLEN10_SENTINEL)
 
 # ====== Final FFWD ======
 FINAL_FFWD_SLEN256_DIR:=$(BLOCK_INTERNALS_DATA_DIR)/slen256
