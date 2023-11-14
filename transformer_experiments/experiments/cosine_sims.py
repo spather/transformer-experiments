@@ -6,6 +6,7 @@ __all__ = ['environment', 'CosineSimilaritiesExperiment', 'get_ffwd_queries', 'r
 # %% ../../nbs/experiments/cosine-sims.ipynb 5
 import gc
 import math
+import os
 from pathlib import Path
 import tempfile
 from typing import Sequence
@@ -197,6 +198,9 @@ def run(
     click.echo(f"  random seed: {random_seed}")
     click.echo(f"  start batch idx: {start_batch_idx}")
 
+    click.echo()
+
+    click.echo(f"pid is {os.getpid()}")
     click.echo()
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
