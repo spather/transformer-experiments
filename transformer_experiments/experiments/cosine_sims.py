@@ -91,9 +91,7 @@ class CosineSimilaritiesExperiment:
                 ffwd_outs.reshape(n_layer, batch_size, 1, n_embed).expand(
                     -1, -1, n_queries, -1
                 ),
-                queries.reshape(n_layer, 1, n_queries, n_embed).expand(
-                    -1, batch_size, -1, -1
-                ),
+                queries.reshape(n_layer, 1, n_queries, n_embed),
                 dim=-1,
             )
 
