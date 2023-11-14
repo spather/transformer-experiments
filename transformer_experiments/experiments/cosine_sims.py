@@ -137,7 +137,7 @@ def get_ffwd_queries(
 environment = get_environment()
 print(f"environment is {environment.name}")
 
-# %% ../../nbs/experiments/cosine-sims.ipynb 16
+# %% ../../nbs/experiments/cosine-sims.ipynb 15
 @click.command()
 @click.argument("model_weights_filename", type=click.Path(exists=True))
 @click.argument("dataset_cache_filename", type=click.Path(exists=True))
