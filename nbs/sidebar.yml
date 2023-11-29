@@ -15,6 +15,7 @@ website:
       - section: common
         contents:
           - common/databatcher.ipynb
+          - common/environments.ipynb
           - common/substring-generator.ipynb
           - common/text-analysis.ipynb
           - common/utils.ipynb
@@ -24,6 +25,7 @@ website:
       - section: experiments
         contents:
           - experiments/block-internals.ipynb
+          - experiments/cosine-sims.ipynb
           - experiments/final_ffwd.ipynb
           - experiments/logit-lens.ipynb
           - experiments/similar-strings.ipynb
