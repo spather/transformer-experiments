@@ -32,6 +32,7 @@ from tqdm.auto import tqdm
 
 # %% ../../nbs/experiments/final_ffwd.ipynb 7
 from ..common.databatcher import DataBatcher
+from ..environments import get_environment
 from ..common.substring_generator import all_unique_substrings
 from ..common.utils import topk_across_batches
 from ..dataset_split import split_text_dataset
@@ -54,7 +55,7 @@ from transformer_experiments.trained_models.tinyshakespeare_transformer import (
     create_model_and_tokenizer,
 )
 
-# %% ../../nbs/experiments/final_ffwd.ipynb 10
+# %% ../../nbs/experiments/final_ffwd.ipynb 11
 class FinalFFWDExperiment:
     def __init__(
         self,
@@ -102,7 +103,7 @@ class FinalFFWDExperiment:
             self._ffwd_output_filename(batch_idx, block_idx),
         )
 
-# %% ../../nbs/experiments/final_ffwd.ipynb 12
+# %% ../../nbs/experiments/final_ffwd.ipynb 13
 @click.command()
 @click.argument("model_weights_filename", type=click.Path(exists=True))
 @click.argument("dataset_cache_filename", type=click.Path(exists=True))

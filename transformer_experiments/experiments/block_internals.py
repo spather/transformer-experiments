@@ -33,6 +33,7 @@ from tqdm.auto import tqdm
 
 # %% ../../nbs/experiments/block-internals.ipynb 7
 from ..common.databatcher import DataBatcher
+from ..environments import get_environment
 from ..common.substring_generator import all_unique_substrings
 from ..common.utils import topk_across_batches
 from ..dataset_split import split_text_dataset
@@ -97,7 +98,7 @@ class BlockInternalsAccessors:
         """Returns the output of the specified block."""
         return self.io_accessors[block_idx].output(".")
 
-# %% ../../nbs/experiments/block-internals.ipynb 12
+# %% ../../nbs/experiments/block-internals.ipynb 13
 class BlockInternalsExperiment:
     """An experiment to run a bunch of inputs through the model and save the
     intermediate values produced within each block."""
@@ -146,7 +147,7 @@ class BlockInternalsExperiment:
         """Returns the output of the specified block."""
         return self.io_accessors[block_idx].output(".")
 
-# %% ../../nbs/experiments/block-internals.ipynb 14
+# %% ../../nbs/experiments/block-internals.ipynb 15
 class DistanceFunction(Protocol):
     """A protocol for a function that computes distances between a batch
     of data and a set of queries."""
@@ -154,7 +155,7 @@ class DistanceFunction(Protocol):
     def __call__(self, batch: torch.Tensor, queries: torch.Tensor) -> torch.Tensor:
         ...
 
-# %% ../../nbs/experiments/block-internals.ipynb 15
+# %% ../../nbs/experiments/block-internals.ipynb 16
 def batch_distances(batch: torch.Tensor, queries: torch.Tensor) -> torch.Tensor:
     """Returns the distance between each item in the batch and the queries."""
     assert batch.dim() == 2, f"batch.dim() should be 2, was {batch.dim()}"
@@ -175,7 +176,7 @@ def batch_distances(batch: torch.Tensor, queries: torch.Tensor) -> torch.Tensor:
     )
     return distances
 
-# %% ../../nbs/experiments/block-internals.ipynb 16
+# %% ../../nbs/experiments/block-internals.ipynb 17
 def batch_cosine_sim(batch: torch.Tensor, queries: torch.Tensor) -> torch.Tensor:
     """Returns the cosine similarity between each item in the batch and the queries."""
     assert batch.dim() == 2, f"batch.dim() should be 2, was {batch.dim()}"
@@ -190,7 +191,7 @@ def batch_cosine_sim(batch: torch.Tensor, queries: torch.Tensor) -> torch.Tensor
         batch.reshape(B, 1, -1).expand(-1, n_queries, -1), queries, dim=-1
     )
 
-# %% ../../nbs/experiments/block-internals.ipynb 17
+# %% ../../nbs/experiments/block-internals.ipynb 18
 class GetFilenameForBatchAndBlock(Protocol):
     """A protocol for a function that returns a filename for given batch
     and block indices."""
@@ -198,7 +199,7 @@ class GetFilenameForBatchAndBlock(Protocol):
     def __call__(self, batch_idx: int, block_idx: int) -> Path:
         ...
 
-# %% ../../nbs/experiments/block-internals.ipynb 18
+# %% ../../nbs/experiments/block-internals.ipynb 19
 class BatchedBlockInternalsExperiment:
     """Similar to BlockInternalsExperiment but rather than running
     all strings as one batch through the model, this one runs them
@@ -487,7 +488,7 @@ class BatchedBlockInternalsExperiment:
             distance_function=distance_function,
         )
 
-# %% ../../nbs/experiments/block-internals.ipynb 20
+# %% ../../nbs/experiments/block-internals.ipynb 21
 @click.command()
 @click.argument("model_weights_filename", type=click.Path(exists=True))
 @click.argument("dataset_cache_filename", type=click.Path(exists=True))
@@ -542,7 +543,7 @@ def run(
 
     exp.run()
 
-# %% ../../nbs/experiments/block-internals.ipynb 21
+# %% ../../nbs/experiments/block-internals.ipynb 22
 class BlockInternalsAnalysis:
     """This class performs analysis of how the next token probabilities change
     as an embedded input is passed through each of the blocks in the model"""

@@ -24,6 +24,7 @@ from ..common.utils import topk_across_batches
 from transformer_experiments.datasets.tinyshakespeare import (
     TinyShakespeareDataSet,
 )
+from ..environments import get_environment
 from transformer_experiments.experiments.block_internals import (
     BlockInternalsExperiment,
     BatchedBlockInternalsExperiment,
@@ -45,7 +46,7 @@ from transformer_experiments.trained_models.tinyshakespeare_transformer import (
     create_model_and_tokenizer,
 )
 
-# %% ../../nbs/experiments/similar-strings.ipynb 10
+# %% ../../nbs/experiments/similar-strings.ipynb 11
 @dataclass
 class SimilarStringsData:
     sim_strings: Sequence[str]
@@ -129,7 +130,7 @@ class SimilarStringsResult:
 
         return aggr_proj_out, aggr_ffwd_out
 
-# %% ../../nbs/experiments/similar-strings.ipynb 12
+# %% ../../nbs/experiments/similar-strings.ipynb 13
 class SimilarStringsExperiment:
     def __init__(
         self,
@@ -408,7 +409,7 @@ class SimilarStringsExperiment:
 
         return string_to_results
 
-# %% ../../nbs/experiments/similar-strings.ipynb 15
+# %% ../../nbs/experiments/similar-strings.ipynb 16
 # CLI for generating similar strings files
 @click.group()
 @click.argument("dataset_cache_filename", type=click.Path(exists=True))

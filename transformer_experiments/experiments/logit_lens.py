@@ -16,6 +16,7 @@ from ..dataset_split import split_text_dataset
 from transformer_experiments.datasets.tinyshakespeare import (
     TinyShakespeareDataSet,
 )
+from ..environments import get_environment
 from transformer_experiments.models.transformer_helpers import (
     EncodingHelpers,
     LogitsWrapper,
