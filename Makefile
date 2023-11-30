@@ -54,7 +54,7 @@ no_fastcore_import_in_lib:
 
 
 # ====== Block Internals ======
-BLOCK_INTERNALS_DATA_DIR:=$(ROOT_DIR)/nbs/artifacts/block_internals_results/large_files
+BLOCK_INTERNALS_DATA_DIR:=$(ROOT_DIR)/generated_data/block_internals_results/large_files
 
 # -- Sample Length 10 --
 BLOCK_INTERNALS_SLEN10_DIR:=$(BLOCK_INTERNALS_DATA_DIR)/slen10
@@ -74,7 +74,7 @@ $(BLOCK_INTERNALS_SLEN10_SENTINEL):
 block_internals_slen10_dataset: $(BLOCK_INTERNALS_SLEN10_SENTINEL)
 
 # ====== Cosine Sims ======
-COSINE_SIMS_DATA_DIR:=$(ROOT_DIR)/nbs/artifacts/cosine_sim_results/large_files
+COSINE_SIMS_DATA_DIR:=$(ROOT_DIR)/generated_data/cosine_sim_results/large_files
 
 # -- Sample Length 10 --
 COSINE_SIMS_SLEN10_DIR:=$(COSINE_SIMS_DATA_DIR)/slen10

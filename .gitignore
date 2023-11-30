@@ -2,6 +2,9 @@
 _docs/
 _proc/
 
+# Ignore the data containing generated data files
+generated_data/
+
 *.bak
 .gitattributes
 .last_checked

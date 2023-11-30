@@ -33,10 +33,12 @@ def is_running_in_github_actions():
 # %% ../nbs/common/environments.ipynb 7
 def get_environment() -> Environment:
     if is_running_on_local_mac():
+        data_root = Path("../../generated_data")
+        data_root.mkdir(exist_ok=True)
         return Environment(
             name="local_mac",
             code_root=Path("../../").resolve(),
-            data_root=Path("../../nbs/artifacts").resolve(),
+            data_root=data_root.resolve(),
         )
     elif is_running_in_paperspace():
         return Environment(
@@ -45,14 +47,16 @@ def get_environment() -> Environment:
             data_root=Path("/storage/"),
         )
     elif is_running_in_github_actions():
+        data_root = Path(
+            "/home/runner/work/transformer-experiments/transformer-experiments/generated_data"
+        )
+        data_root.mkdir(exist_ok=True)
         return Environment(
             name="github_actions",
             code_root=Path(
                 "/home/runner/work/transformer-experiments/transformer-experiments/"
             ),
-            data_root=Path(
-                "/home/runner/work/transformer-experiments/transformer-experiments/nbs/artifacts"
-            ),
+            data_root=data_root,
         )
     else:
         raise ValueError("Unknown environment")
