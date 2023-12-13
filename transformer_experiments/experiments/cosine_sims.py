@@ -255,7 +255,7 @@ def pre_filter_cosine_sim_results(
         batch = load_batch(batch_idx)
         n_layer_batch, batch_size, n_queries = batch.shape
         assert n_layer_batch == n_layer
-        assert 0 <= q_idx_start < q_idx_end < n_queries
+        assert 0 <= q_idx_start < q_idx_end <= n_queries
 
         filtered = batch[:, :, q_idx_start:q_idx_end] > threshold
         block_idxs, indices_in_batch, q_idxs = torch.nonzero(filtered, as_tuple=True)
