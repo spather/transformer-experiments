@@ -2,15 +2,16 @@
 
 # %% auto 0
 __all__ = ['PreFilterResult', 'CosineSimilaritiesExperiment', 'get_ffwd_queries', 'run', 'LoadBatchFunction',
-           'pre_filter_cosine_sim_results']
+           'pre_filter_cosine_sim_results', 'LoadPrefilteredFunction', 'filter_on_prefiltered_results']
 
 # %% ../../nbs/experiments/cosine-sims.ipynb 5
 import gc
 import math
 import os
+from operator import itemgetter
 from pathlib import Path
 import tempfile
-from typing import Dict, List, Protocol, Sequence
+from typing import Callable, Dict, List, Protocol, Sequence
 
 # %% ../../nbs/experiments/cosine-sims.ipynb 6
 import click
@@ -298,3 +299,32 @@ def pre_filter_cosine_sim_results(
             )
 
     return tensor_result
+
+# %% ../../nbs/experiments/cosine-sims.ipynb 18
+class LoadPrefilteredFunction(Protocol):
+    def __call__(self, q_idx: int) -> torch.Tensor:
+        ...
+
+
+def filter_on_prefiltered_results(
+    load_prefiltered: LoadPrefilteredFunction,
+    q_idx_start: int,
+    q_idx_end: int,
+    filter_fn: Callable[[torch.Tensor], torch.Tensor],
+):
+    """Performs filtering over results prefiltered by pre_filter_cosine_sim_results().
+    The `load_prefiltered` function will be called with a query index and should
+    return the prefiltered data for it (in the from of a dictionary with `indices`
+    and `values` keys, as saved by pre_filter_cosine_sim_results()).
+
+    Returns a list containing one list for each query index containing the indices
+    from the prefiltered data corresponding to the values that passed the filter
+    function."""
+    matching_indices = []
+    for q_idx in range(q_idx_start, q_idx_end):
+        prefiltered = load_prefiltered(q_idx)
+        indices, values = itemgetter("indices", "values")(prefiltered)
+        indices_into_values = torch.nonzero(filter_fn(values)).squeeze(dim=-1)
+        matching_indices.append(indices[indices_into_values])
+
+    return matching_indices
