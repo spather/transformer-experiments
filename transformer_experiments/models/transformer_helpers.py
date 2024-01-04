@@ -253,7 +253,7 @@ class LogitsWrapper:
         x_indices = np.arange(self.tokenizer.vocab_size)
         x_labels = [repr(c)[1:-1] for c in self.tokenizer.chars]
 
-        ax.bar(x_indices, self.probs()[b_i, t_i])
+        ax.bar(x_indices, self.probs()[b_i, t_i].cpu())
         ax.set_xticks(x_indices, x_labels, rotation="vertical")
         ax.set_title(title)
         ax.set_ylim(0.0, 1.0)
