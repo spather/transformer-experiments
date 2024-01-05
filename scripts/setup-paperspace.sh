@@ -20,7 +20,7 @@ NOTEBOOKS="/notebooks"
 
 # install manim deps
 sudo apt update
-sudo apt install build-essential python3-dev libcairo2-dev libpango1.0-dev ffmpeg
+sudo apt-get install --yes build-essential python3-dev libcairo2-dev libpango1.0-dev ffmpeg
 
 # create and activate venv
 VENV_DIR="${NOTEBOOKS}/venv/venv-transformer"
