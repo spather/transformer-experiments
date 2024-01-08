@@ -9,6 +9,8 @@ website:
           - analyses/20_cosine_sim_intermediates.ipynb
           - analyses/30_similar_strings_deep_dive.ipynb
           - analyses/40_widening_similar_space.ipynb
+          - analyses/50_approximation_details.ipynb
+          - analyses/60_learning_embeddings.ipynb
       - section: blog_posts
         contents:
           - blog_posts/block_internals.ipynb
