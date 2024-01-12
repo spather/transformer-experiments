@@ -18,6 +18,7 @@ website:
           - common/databatcher.ipynb
           - common/environments.ipynb
           - common/substring-generator.ipynb
+          - common/svd-helpers.ipynb
           - common/text-analysis.ipynb
           - common/utils.ipynb
       - section: datasets
