@@ -27,6 +27,7 @@ website:
           - datasets/tinyshakespeare.ipynb
       - section: experiments
         contents:
+          - experiments/alternate-models.ipynb
           - experiments/block-internals.ipynb
           - experiments/cosine-sims.ipynb
           - experiments/final_ffwd.ipynb
@@ -36,6 +37,7 @@ website:
       - section: models
         contents:
           - models/transformer-helpers.ipynb
+          - models/transformer-training.ipynb
           - models/transformer.ipynb
       - section: tokenizers
         contents:
