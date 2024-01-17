@@ -186,11 +186,21 @@ class TransformerAccessors:
         """Given an input (already embedded), runs the model on it and returns a
         the logits and a sequence of `InputOutputAccessor` objects that provide
         access to the inputs and outputs of each block in the model."""
+        return self.run_model_from_block_n(embedded_input, 0)
+
+    def run_model_from_block_n(
+        self, embedded_input: torch.Tensor, n: int
+    ) -> Tuple[torch.Tensor, Sequence[InputOutputAccessor]]:
+        """Given an embedding, runs the model from block `n` onwards and returns
+        the logits and a sequence of `InputOutputAccessor` objects that provide
+        access to the inputs and outputs of each block. Note that the sequence
+        of `InputOutputAccessor` objects will only contain `n_layer - n` elements
+        and index 0 corresponds to block `n` of the model."""
         self.check_valid_input_shape(embedded_input)
 
         blocks, io_accessors = zip(
             *[  # See https://stackoverflow.com/a/13635074
-                self.copy_block_from_model(block_idx=i) for i in range(n_layer)
+                self.copy_block_from_model(block_idx=i) for i in range(n, n_layer)
             ]
         )
 
@@ -201,7 +211,7 @@ class TransformerAccessors:
 
         return logits.detach(), io_accessors
 
-# %% ../../nbs/models/transformer-helpers.ipynb 24
+# %% ../../nbs/models/transformer-helpers.ipynb 25
 class LogitsWrapper:
     """A wrapper class around a tensor of logits that provides
     convenience methods for interpreting and visualizing them."""

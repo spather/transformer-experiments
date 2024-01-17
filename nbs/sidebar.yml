@@ -11,6 +11,7 @@ website:
           - analyses/40_widening_similar_space.ipynb
           - analyses/50_approximation_details.ipynb
           - analyses/60_combining_token_subspaces.ipynb
+          - analyses/70_embedding_adjustments.ipynb
       - section: blog_posts
         contents:
           - blog_posts/block_internals.ipynb
