@@ -33,9 +33,7 @@ cloup==0.13.1
 colour==0.1.5
     # via manim
 comm==0.1.4
-    # via
-    #   ipykernel
-    #   ipywidgets
+    # via ipykernel
 contourpy==1.1.1
     # via matplotlib
 cycler==0.12.1
@@ -50,7 +48,7 @@ decorator==5.1.1
     #   manim
 execnb==0.1.5
     # via nbdev
-executing==2.0.0
+executing==2.0.1
     # via stack-data
 fastcore==1.5.29
     # via
