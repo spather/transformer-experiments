@@ -31,7 +31,9 @@ comm==0.1.4
     #   -c requirements.txt
     #   ipykernel
 debugpy==1.8.0
-    # via ipykernel
+    # via
+    #   -c requirements.txt
+    #   ipykernel
 decorator==5.1.1
     # via
     #   -c requirements.txt
@@ -40,8 +42,10 @@ executing==2.0.0
     # via
     #   -c requirements.txt
     #   stack-data
-ipykernel==6.25.2
-    # via -r requirements.dev.in
+ipykernel==6.29.0
+    # via
+    #   -c requirements.txt
+    #   -r requirements.dev.in
 ipython==8.16.1
     # via
     #   -c requirements.txt
@@ -50,10 +54,13 @@ jedi==0.19.1
     # via
     #   -c requirements.txt
     #   ipython
-jupyter-client==8.4.0
-    # via ipykernel
-jupyter-core==5.4.0
+jupyter-client==8.6.0
     # via
+    #   -c requirements.txt
+    #   ipykernel
+jupyter-core==5.7.1
+    # via
+    #   -c requirements.txt
     #   ipykernel
     #   jupyter-client
 line-profiler==4.1.1
@@ -69,8 +76,10 @@ mypy-extensions==1.0.0
     # via
     #   black
     #   mypy
-nest-asyncio==1.5.8
-    # via ipykernel
+nest-asyncio==1.6.0
+    # via
+    #   -c requirements.txt
+    #   ipykernel
 packaging==23.2
     # via
     #   -c requirements.txt
@@ -93,16 +102,19 @@ pickleshare==0.7.5
     #   ipython
 pip-tools==7.3.0
     # via -r requirements.dev.in
-platformdirs==3.11.0
+platformdirs==4.1.0
     # via
+    #   -c requirements.txt
     #   black
     #   jupyter-core
 prompt-toolkit==3.0.39
     # via
     #   -c requirements.txt
     #   ipython
-psutil==5.9.6
-    # via ipykernel
+psutil==5.9.8
+    # via
+    #   -c requirements.txt
+    #   ipykernel
 ptyprocess==0.7.0
     # via
     #   -c requirements.txt
@@ -121,8 +133,9 @@ python-dateutil==2.8.2
     # via
     #   -c requirements.txt
     #   jupyter-client
-pyzmq==25.1.1
+pyzmq==25.1.2
     # via
+    #   -c requirements.txt
     #   ipykernel
     #   jupyter-client
 six==1.16.0
@@ -134,8 +147,9 @@ stack-data==0.6.3
     # via
     #   -c requirements.txt
     #   ipython
-tornado==6.3.3
+tornado==6.4
     # via
+    #   -c requirements.txt
     #   ipykernel
     #   jupyter-client
 traitlets==5.11.2
