@@ -152,8 +152,7 @@ class DistanceFunction(Protocol):
     """A protocol for a function that computes distances between a batch
     of data and a set of queries."""
 
-    def __call__(self, batch: torch.Tensor, queries: torch.Tensor) -> torch.Tensor:
-        ...
+    def __call__(self, batch: torch.Tensor, queries: torch.Tensor) -> torch.Tensor: ...
 
 # %% ../../nbs/experiments/block-internals.ipynb 16
 def batch_distances(batch: torch.Tensor, queries: torch.Tensor) -> torch.Tensor:
@@ -196,8 +195,7 @@ class GetFilenameForBatchAndBlock(Protocol):
     """A protocol for a function that returns a filename for given batch
     and block indices."""
 
-    def __call__(self, batch_idx: int, block_idx: int) -> Path:
-        ...
+    def __call__(self, batch_idx: int, block_idx: int) -> Path: ...
 
 # %% ../../nbs/experiments/block-internals.ipynb 19
 class BatchedBlockInternalsExperiment:

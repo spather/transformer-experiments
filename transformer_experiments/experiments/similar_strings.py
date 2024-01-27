@@ -386,9 +386,9 @@ class SimilarStringsExperiment:
                         s_idx = proj_batch["strings"][s]
                         sim_strings = proj_batch["sim_strings"][s_idx]
                         distances = proj_distances[:, s_idx]
-                        string_to_results[s].proj_out[block_idx][
-                            t_i
-                        ] = SimilarStringsData(sim_strings, distances)
+                        string_to_results[s].proj_out[block_idx][t_i] = (
+                            SimilarStringsData(sim_strings, distances)
+                        )
 
                     ffwd_batch = self._load_json(
                         self._ffwd_out_sim_strings_filename(
@@ -403,9 +403,9 @@ class SimilarStringsExperiment:
                         s_idx = ffwd_batch["strings"][s]
                         sim_strings = ffwd_batch["sim_strings"][s_idx]
                         distances = ffwd_distances[:, s_idx]
-                        string_to_results[s].ffwd_out[block_idx][
-                            t_i
-                        ] = SimilarStringsData(sim_strings, distances)
+                        string_to_results[s].ffwd_out[block_idx][t_i] = (
+                            SimilarStringsData(sim_strings, distances)
+                        )
 
         return string_to_results
 

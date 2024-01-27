@@ -232,8 +232,7 @@ def run(
 
 # %% ../../nbs/experiments/cosine-sims.ipynb 16
 class LoadBatchFunction(Protocol):
-    def __call__(self, batch_idx: int) -> torch.Tensor:
-        ...
+    def __call__(self, batch_idx: int) -> torch.Tensor: ...
 
 
 PreFilterResult = Sequence[Sequence[Dict[str, torch.Tensor]]]
@@ -302,8 +301,7 @@ def pre_filter_cosine_sim_results(
 
 # %% ../../nbs/experiments/cosine-sims.ipynb 18
 class LoadPrefilteredFunction(Protocol):
-    def __call__(self, q_idx: int) -> torch.Tensor:
-        ...
+    def __call__(self, q_idx: int) -> torch.Tensor: ...
 
 
 def filter_on_prefiltered_results(

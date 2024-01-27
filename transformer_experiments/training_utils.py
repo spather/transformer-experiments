@@ -44,23 +44,19 @@ TModel = TypeVar("TModel", bound=torch.nn.Module, contravariant=True)
 
 
 class EstimateLossFunction(Protocol[TModel]):
-    def __call__(self, model: TModel) -> Dict[str, float]:
-        ...
+    def __call__(self, model: TModel) -> Dict[str, float]: ...
 
 
 class GetBatchFunction(Protocol):
-    def __call__(self, split: str) -> Tuple[torch.Tensor, torch.Tensor]:
-        ...
+    def __call__(self, split: str) -> Tuple[torch.Tensor, torch.Tensor]: ...
 
 
 class OnBatchTrainedHandler(Protocol):
-    def __call__(self, iters_trained: int, batch: torch.Tensor) -> None:
-        ...
+    def __call__(self, iters_trained: int, batch: torch.Tensor) -> None: ...
 
 
 class OnCheckpointSavedHandler(Protocol):
-    def __call__(self, iters_trained: int, checkpoint_file: Path) -> None:
-        ...
+    def __call__(self, iters_trained: int, checkpoint_file: Path) -> None: ...
 
 
 class Trainer(Generic[TModel]):
