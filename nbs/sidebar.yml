@@ -14,7 +14,7 @@ website:
           - analyses/70_embedding_adjustments.ipynb
       - section: blog_posts
         contents:
-          - blog_posts/block_internals.ipynb
+          - blog_posts/beyond-self-attention.ipynb
       - section: common
         contents:
           - common/databatcher.ipynb
