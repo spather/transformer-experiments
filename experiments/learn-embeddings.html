@@ -1,0 +1,2833 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.549">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="This notebook contains the code for learning embeddings at various stages of the pipeline.">
+
+<title>transformer-experiments - learn-embeddings</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script><script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+<script src="https://unpkg.com/@jupyter-widgets/html-manager@*/dist/embed-amd.js" crossorigin="anonymous"></script>
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../styles.css">
+<meta property="og:title" content="transformer-experiments - learn-embeddings">
+<meta property="og:description" content="This notebook contains the code for learning embeddings at various stages of the pipeline.">
+<meta property="og:site_name" content="transformer-experiments">
+<meta name="twitter:title" content="transformer-experiments - learn-embeddings">
+<meta name="twitter:description" content="This notebook contains the code for learning embeddings at various stages of the pipeline.">
+<meta name="twitter:card" content="summary">
+</head>
+
+<body class="nav-sidebar floating nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">transformer-experiments</span>
+    </a>
+  </div>
+        <div class="quarto-navbar-tools">
+</div>
+          <div id="quarto-search" class="" title="Search"></div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../experiments/alternate-models.html">experiments</a></li><li class="breadcrumb-item"><a href="../experiments/learn-embeddings.html">learn-embeddings</a></li></ol></nav>
+        <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">transformer-experiments</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true">
+ <span class="menu-text">analyses</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../analyses/introduction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../analyses/clustering_block_intermediates.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Interpreting the Projection and Feed-Forward Layers in a Self-Attention Block</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../analyses/cosine_sim_intermediates.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Investigation of Cosine Similarity of Block Intermediates</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../analyses/similar_strings_deep_dive.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Deep Dive into Similar Strings Progress through the Model</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../analyses/widening_similar_space.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Widening the Space of Similar Values</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../analyses/approximation_details.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Approximation Interpretation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../analyses/combining_token_subspaces.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Combining Token Subspaces</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../analyses/embedding_adjustments.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Embedding Adjustments</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true">
+ <span class="menu-text">blog_posts</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../blog_posts/beyond-self-attention.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Beyond Self-Attention: How a Small Language Model Predicts the Next Token</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="true">
+ <span class="menu-text">common</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../common/databatcher.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">databatcher</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../common/environments.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">environments</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../common/substring-generator.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">substring-generator</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../common/svd-helpers.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">svd-helpers</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../common/text-analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">text-analysis</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../common/utils.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">utils</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-expanded="true">
+ <span class="menu-text">datasets</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../datasets/tinyshakespeare.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">tinyshakespeare.ipynb</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" aria-expanded="true">
+ <span class="menu-text">experiments</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../experiments/alternate-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">alternate-models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../experiments/block-internals.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">block-internals</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../experiments/cosine-sims.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">cosine-sims</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../experiments/final_ffwd.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">final-ffwd</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../experiments/learn-embeddings.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">learn-embeddings</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../experiments/logit-lens.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">logit-lens</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../experiments/similar-strings.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">similar-strings</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" aria-expanded="true">
+ <span class="menu-text">models</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../models/transformer-helpers.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">transformer-helpers.ipynb</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../models/transformer-training.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">transformer-training</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../models/transformer.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">transformer</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" aria-expanded="true">
+ <span class="menu-text">tokenizers</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tokenizers/char-tokenizer.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">char-tokenizer.ipynb</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" aria-expanded="true">
+ <span class="menu-text">trained_models</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../trained_models/tinyshakespeare-transformer.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">tinyshakespeare-transformer</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" aria-expanded="true">
+ <span class="menu-text">training</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../training/dataset-split.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">dataset-split</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../training/training-utils.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">training-utils.ipynb</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#core-idea" id="toc-core-idea" class="nav-link active" data-scroll-target="#core-idea">Core Idea</a></li>
+  <li><a href="#learn-embeddings-for-each-token-and-save-them" id="toc-learn-embeddings-for-each-token-and-save-them" class="nav-link" data-scroll-target="#learn-embeddings-for-each-token-and-save-them">Learn embeddings for each token and save them</a>
+  <ul class="collapse">
+  <li><a href="#no-blocks" id="toc-no-blocks" class="nav-link" data-scroll-target="#no-blocks">No Blocks</a></li>
+  <li><a href="#block" id="toc-block" class="nav-link" data-scroll-target="#block">1 Block</a></li>
+  <li><a href="#blocks" id="toc-blocks" class="nav-link" data-scroll-target="#blocks">2 Blocks</a></li>
+  </ul></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/spather/transformer-experiments/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../experiments/alternate-models.html">experiments</a></li><li class="breadcrumb-item"><a href="../experiments/learn-embeddings.html">learn-embeddings</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">learn-embeddings</h1>
+</div>
+
+<div>
+  <div class="description">
+    This notebook contains the code for learning embeddings at various stages of the pipeline.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<!-- WARNING: THIS FILE WAS AUTOGENERATED! DO NOT EDIT! -->
+<div id="cell-2" class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>environment <span class="op">=</span> get_environment()</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"environment is </span><span class="sc">{</span>environment<span class="sc">.</span>name<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>environment is paperspace</code></pre>
+</div>
+</div>
+<div id="cell-3" class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> <span class="st">'cuda'</span> <span class="cf">if</span> torch.cuda.is_available() <span class="cf">else</span> <span class="st">'cpu'</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>ts <span class="op">=</span> TinyShakespeareDataSet(cache_file<span class="op">=</span>environment.code_root <span class="op">/</span> <span class="st">'nbs/artifacts/input.txt'</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>m, tokenizer <span class="op">=</span> create_model_and_tokenizer(</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    saved_model_filename<span class="op">=</span>environment.code_root <span class="op">/</span> <span class="st">'nbs/artifacts/shakespeare-20231112.pt'</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    dataset<span class="op">=</span>ts,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    device<span class="op">=</span>device,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>_, val_data <span class="op">=</span> split_text_dataset(ts.text, tokenizer, train_pct<span class="op">=</span><span class="fl">0.9</span>, device<span class="op">=</span>device)</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>encoding_helpers <span class="op">=</span> EncodingHelpers(tokenizer, device)</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>accessors <span class="op">=</span> TransformerAccessors(m, device)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-4" class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"device is </span><span class="sc">{</span>device<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>device is cuda</code></pre>
+</div>
+</div>
+<section id="core-idea" class="level2">
+<h2 class="anchored" data-anchor-id="core-idea">Core Idea</h2>
+<p>At any point in the transformer after tokens have been embedded, we can think of the remainder of the pipeline as a function that transforms from embedding space (<span class="math inline">\(\mathbb{R}^{384}\)</span> since <code>n_embed = 384</code>) to logit space (<span class="math inline">\(\mathbb{R}^{65}\)</span> <code>vocab_size=65</code>). For a given token, say the letter <code>a</code>, we might ask: at this point in the pipeline, what embedding will produce output logits that result in a probability very close to 1 for this token? In other words, what embedding, if provided as input at this point, will result in the transformer predicting the given token as the next token?</p>
+<p>I suspect this is difficult to determine analytically, especially for earlier parts of the pipeline where the input embedding has to go through many transformer blocks before output logits are computed. But, we can actually <em>learn</em> the embeddings that result in the right kind of logits.</p>
+<p>I say embeddings - plural - because it seems there isn’t just one unique embedding for each token. Likely, there is some subspace of the full embeddings space, <span class="math inline">\(\mathbb{R}^{384}\)</span>, that corresponds to specific tokens being predicted. While I don’t know of a way to find the bounds of this space directly, we can learn several embeddings within the space and then work out a good enough approximation of the space.</p>
+<p>To do this, we set up a typical deep-learning problem: * The portion of the transformer we’re interested in is fixed; the embeddings input into it are the parameters we’re optimizing and they start with random initialization. * We do a forward pass, computing the logits from the embeddings we have. * We compute negative log likelihood loss relative to the token we’re trying to learn embeddings for. * We do a backward pass, adjusting the values of the embeddings according to the gradients.</p>
+<p>It works remarkably well.</p>
+<div id="cell-6" class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> learn_embedding_for_char(</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    target_char: <span class="bu">str</span>,</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    embedding_to_logits: Callable[[torch.Tensor], torch.Tensor],</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    n_embeddings_to_learn: <span class="bu">int</span> <span class="op">=</span> <span class="dv">1</span>,</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    learning_rate: <span class="bu">float</span> <span class="op">=</span> <span class="fl">3e-4</span>,</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    minimum_loss: <span class="bu">float</span> <span class="op">=</span> <span class="fl">1e-4</span>,</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    max_iters: <span class="bu">int</span> <span class="op">=</span> <span class="dv">50000</span>,</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    device: <span class="bu">str</span> <span class="op">=</span> device,</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>) <span class="op">-&gt;</span> torch.Tensor:</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Given a character, learns the embedding that,</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="co">    when given as input to the `embedding_to_logits`</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="co">    function, produces the logits select that character</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co">    with probability almost 1."""</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> <span class="bu">len</span>(target_char) <span class="op">==</span> <span class="dv">1</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    target <span class="op">=</span> torch.tensor(tokenizer.encode(target_char), device<span class="op">=</span>device)</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    lsfm <span class="op">=</span> nn.LogSoftmax(dim<span class="op">=-</span><span class="dv">1</span>)</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    lsfm.to(device)</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    x <span class="op">=</span> torch.nn.Parameter(</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>        torch.randn(n_embeddings_to_learn, <span class="dv">1</span>, n_embed, device<span class="op">=</span>device),</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>        requires_grad<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>    optimizer <span class="op">=</span> torch.optim.AdamW([x], lr<span class="op">=</span>learning_rate)</span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>    eval_iters <span class="op">=</span> max_iters <span class="op">//</span> <span class="dv">10</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Optimizing embedding for </span><span class="sc">{</span><span class="bu">repr</span>(target_char)<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> step <span class="kw">in</span> <span class="bu">range</span>(max_iters):</span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>        logits <span class="op">=</span> embedding_to_logits(x)</span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>        B, T, C <span class="op">=</span> logits.shape</span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>        yhat <span class="op">=</span> lsfm(logits.view(B <span class="op">*</span> T, C))</span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>        loss <span class="op">=</span> F.nll_loss(yhat, target.expand(n_embeddings_to_learn))</span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> loss <span class="op">&lt;</span> minimum_loss:</span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="ss">f"ending training at step </span><span class="sc">{</span>step<span class="sc">:&gt;5}</span><span class="ss">: loss </span><span class="sc">{</span>loss<span class="sc">.</span>item()<span class="sc">:.6f}</span><span class="ss">"</span>)</span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span></span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> step <span class="op">%</span> eval_iters <span class="op">==</span> <span class="dv">0</span>:</span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="ss">f"step </span><span class="sc">{</span>step<span class="sc">:&gt;5}</span><span class="ss">: loss </span><span class="sc">{</span>loss<span class="sc">.</span>item()<span class="sc">:.6f}</span><span class="ss">"</span>)</span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>        optimizer.zero_grad(set_to_none<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>        loss.backward()</span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>        optimizer.step()</span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> x.data.detach(), loss</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Define a function that encapsulate the final output head of the transformer, after all the blocks (basically, a layer norm followed by a linear layer going from embedding space to token space):</p>
+<div id="cell-8" class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Similar to TransformerAccessors.logits_from_embedding but does not</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co"># detach the result from the computation graph.</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> transformer_output_head_function(m: TransformerLanguageModel) <span class="op">-&gt;</span> Callable[[torch.Tensor], torch.Tensor]:</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    ln_f <span class="op">=</span> nn.LayerNorm(n_embed)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    lm_head <span class="op">=</span> nn.Linear(n_embed, tokenizer.vocab_size)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    ln_f.load_state_dict(m.ln_f.state_dict())</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    lm_head.load_state_dict(m.lm_head.state_dict())</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    ln_f.to(device)</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    lm_head.to(device)</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">lambda</span> x: lm_head(ln_f(x))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Now we can use this to learn, e.g., an embedding that, at the very end of the transformer, after all the blocks, is likely to produce a next token probability for <code>a</code> of nearly 1.</p>
+<div id="cell-10" class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>torch.manual_seed(<span class="dv">42</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>emb_a, _ <span class="op">=</span> learn_embedding_for_char(<span class="st">'a'</span>, transformer_output_head_function(m))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Optimizing embedding for 'a'
+step     0: loss 2.809722
+step  5000: loss 0.009828
+step 10000: loss 0.000751
+ending training at step 14316: loss 0.000100</code></pre>
+</div>
+</div>
+<p>We can test this, by sending the resulting embedding through the output head and plotting the next token probabilities:</p>
+<div id="cell-12" class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>logits <span class="op">=</span> LogitsWrapper(accessors.logits_from_embedding(unsqueeze_emb(emb_a)), tokenizer)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>logits.plot_probs()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="learn-embeddings_files/figure-html/cell-8-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>That was just one possible embedding that selects <code>a</code>. We can learn others. The following code snippet will learn 100 such embeddings.</p>
+<div id="cell-14" class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Try learning more than one embedding</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>torch.manual_seed(<span class="dv">42</span>)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>multi_emb_a, _ <span class="op">=</span> learn_embedding_for_char(</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"a"</span>, transformer_output_head_function(m), n_embeddings_to_learn<span class="op">=</span><span class="dv">100</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Optimizing embedding for 'a'
+step     0: loss 4.480039
+step  5000: loss 0.014915
+step 10000: loss 0.001181
+step 15000: loss 0.000119
+ending training at step 15389: loss 0.000100</code></pre>
+</div>
+</div>
+<div id="cell-15" class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>multi_emb_a.shape</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<pre><code>torch.Size([100, 1, 384])</code></pre>
+</div>
+</div>
+<p>We can convince ourselves that these are sufficiently varied by examining some stats:</p>
+<div id="cell-17" class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> multi_emb_stats(multi_embs: torch.Tensor):</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    norms <span class="op">=</span> torch.norm(multi_embs[:, <span class="dv">0</span>, :], dim<span class="op">=-</span><span class="dv">1</span>)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"norms: mean </span><span class="sc">{</span>norms<span class="sc">.</span>mean()<span class="sc">.</span>item()<span class="sc">:.6f}</span><span class="ss">, std </span><span class="sc">{</span>norms<span class="sc">.</span>std()<span class="sc">.</span>item()<span class="sc">:.6f}</span><span class="ss">"</span>)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"norms: min </span><span class="sc">{</span>norms<span class="sc">.</span><span class="bu">min</span>()<span class="sc">.</span>item()<span class="sc">:.6f}</span><span class="ss">, max </span><span class="sc">{</span>norms<span class="sc">.</span><span class="bu">max</span>()<span class="sc">.</span>item()<span class="sc">:.6f}</span><span class="ss">"</span>)</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    norm_diffs <span class="op">=</span> []</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(multi_embs.shape[<span class="dv">0</span>]):</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(multi_embs.shape[<span class="dv">0</span>]):</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> i <span class="op">!=</span> j:</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>                norm_diffs.append(torch.norm(multi_embs[i, <span class="dv">0</span>, :] <span class="op">-</span> multi_embs[j, <span class="dv">0</span>, :]))</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>    norm_diffs <span class="op">=</span> torch.tensor(norm_diffs)</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"norm diffs: mean </span><span class="sc">{</span>norm_diffs<span class="sc">.</span>mean()<span class="sc">.</span>item()<span class="sc">:.6f}</span><span class="ss">, std </span><span class="sc">{</span>norm_diffs<span class="sc">.</span>std()<span class="sc">.</span>item()<span class="sc">:.6f}</span><span class="ss">"</span>)</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"norm diffs: min </span><span class="sc">{</span>norm_diffs<span class="sc">.</span><span class="bu">min</span>()<span class="sc">.</span>item()<span class="sc">:.6f}</span><span class="ss">, max </span><span class="sc">{</span>norm_diffs<span class="sc">.</span><span class="bu">max</span>()<span class="sc">.</span>item()<span class="sc">:.6f}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-18" class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>multi_emb_stats(multi_emb_a)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>norms: mean 16.764254, std 0.759987
+norms: min 15.078418, max 18.306231
+norm diffs: mean 16.599855, std 0.760862
+norm diffs: min 13.795146, max 19.167126</code></pre>
+</div>
+</div>
+<p>The norms of the embeddings range from about 15 to about 18, with a mean of about 16.7. Then if we compute the differences between all the learned embeddings and take the norms of those differences, we see that they are quite large: the differences range from 13.8 to about 19, with a mean of 16.6. If we’d somehow learned 100 nearly identical vectors, the differences would be a lot smaller.</p>
+<p>Now we’ll define a function that implements the portion of a the transformer pipeline from a given block onwards. E.g. If called with <code>n=3</code>, this would implement blocks index 3, 4, and 5, plus the transformer output head.</p>
+<div id="cell-21" class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Similar to TransformerAccessors.run_model_from_block_n but does not</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="co"># detach the result from the computation graph.</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> block_n_on_function(m: TransformerLanguageModel, n: <span class="bu">int</span>) <span class="op">-&gt;</span> Callable[[torch.Tensor], torch.Tensor]:</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> n <span class="op">&gt;=</span> <span class="dv">0</span> <span class="kw">and</span> n <span class="op">&lt;</span> n_layer, <span class="st">"n must be in [0, n_layer)"</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    blocks, _ <span class="op">=</span> <span class="bu">zip</span>(</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>        <span class="op">*</span>[</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>            accessors.copy_block_from_model(block_idx<span class="op">=</span>i)</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(n, n_layer)</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>        ]</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>    blocks_module <span class="op">=</span> torch.nn.Sequential(<span class="op">*</span>blocks)</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>    output_head <span class="op">=</span> transformer_output_head_function(m)</span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">lambda</span> x: output_head(blocks_module(x))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We can now learn 100 embeddings for the letter a, from block index 5 (the last block) in transformer.</p>
+<div id="cell-23" class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>torch.manual_seed(<span class="dv">42</span>)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>multi_emb_a_5, _ <span class="op">=</span> learn_embedding_for_char(<span class="st">'a'</span>, block_n_on_function(m, n<span class="op">=</span><span class="dv">5</span>), n_embeddings_to_learn<span class="op">=</span><span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Optimizing embedding for 'a'
+step     0: loss 4.540399
+step  5000: loss 0.003825
+step 10000: loss 0.000321
+ending training at step 12689: loss 0.000100</code></pre>
+</div>
+</div>
+<div id="cell-24" class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>multi_emb_stats(multi_emb_a_5)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>norms: mean 17.498230, std 0.640826
+norms: min 15.787105, max 19.508923
+norm diffs: mean 23.514679, std 0.885002
+norm diffs: min 20.520039, max 27.281914</code></pre>
+</div>
+</div>
+<p>These show even more variation than the ones learned for the output head alone.</p>
+<p>As a spot check, let’s plot an arbitrary one of these:</p>
+<div id="cell-26" class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Try an arbitrary embedding and plot it.</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>logits <span class="op">=</span> LogitsWrapper(block_n_on_function(m, n<span class="op">=</span><span class="dv">5</span>)(unsqueeze_emb(multi_emb_a_5[<span class="dv">22</span>, <span class="dv">0</span>, :])).detach(), tokenizer)</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>logits.plot_probs()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="learn-embeddings_files/figure-html/cell-16-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>It produces <code>a</code> with probability nearly 1, as we’d expect. I spot checked with several more examples and they all looked right.</p>
+<p>Next, we can learn embeddings from an earlier point, say from block index 1 on:</p>
+<div id="cell-29" class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>torch.manual_seed(<span class="dv">42</span>)</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>multi_emb_a_1, _ <span class="op">=</span> learn_embedding_for_char(<span class="st">'a'</span>, block_n_on_function(m, n<span class="op">=</span><span class="dv">1</span>), n_embeddings_to_learn<span class="op">=</span><span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Optimizing embedding for 'a'
+step     0: loss 3.682070
+step  5000: loss 0.003850
+step 10000: loss 0.000303
+ending training at step 12545: loss 0.000100</code></pre>
+</div>
+</div>
+<div id="cell-30" class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>multi_emb_stats(multi_emb_a_1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>norms: mean 17.507275, std 0.661216
+norms: min 15.955662, max 18.931648
+norm diffs: mean 24.441858, std 0.949635
+norm diffs: min 21.217833, max 27.614788</code></pre>
+</div>
+</div>
+<p>Even more variation now. Again, let’s spot check:</p>
+<div id="cell-32" class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Try an arbitrary embedding and plot it.</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>logits <span class="op">=</span> LogitsWrapper(block_n_on_function(m, n<span class="op">=</span><span class="dv">1</span>)(unsqueeze_emb(multi_emb_a_1[<span class="dv">63</span>, <span class="dv">0</span>, :])).detach(), tokenizer)</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>logits.plot_probs()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="learn-embeddings_files/figure-html/cell-19-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>With this in place, we can now learn embeddings for all the tokens and save them for later use.</p>
+</section>
+<section id="learn-embeddings-for-each-token-and-save-them" class="level2">
+<h2 class="anchored" data-anchor-id="learn-embeddings-for-each-token-and-save-them">Learn embeddings for each token and save them</h2>
+<div id="cell-35" class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>results_folder <span class="op">=</span> environment.data_root <span class="op">/</span> <span class="st">'learned_embeddings'</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>results_folder.mkdir(exist_ok<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-36" class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>filename_for_token <span class="op">=</span> FilenameForToken(tokenizer)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-37" class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>n_embeddings_to_learn <span class="op">=</span> <span class="dv">100</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="no-blocks" class="level3">
+<h3 class="anchored" data-anchor-id="no-blocks">No Blocks</h3>
+<p>Learn embeddings for just the output head:</p>
+<div id="cell-40" class="cell">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>embedding_to_logits_function <span class="op">=</span> transformer_output_head_function(m)</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>sub_dir <span class="op">=</span> results_folder <span class="op">/</span> <span class="ss">f'no_blocks'</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>sub_dir.mkdir(exist_ok<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-41" class="cell">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> target_char <span class="kw">in</span> tqdm(tokenizer.chars):</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>    multi_embs, _ <span class="op">=</span> learn_embedding_for_char(</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>        target_char, embedding_to_logits_function, n_embeddings_to_learn<span class="op">=</span>n_embeddings_to_learn</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>    torch.save(multi_embs, sub_dir <span class="op">/</span> <span class="ss">f'</span><span class="sc">{</span>filename_for_token(target_char)<span class="sc">}</span><span class="ss">.pt'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"1ae00820dd4e487e987375b37cc1b91f","version_major":2,"version_minor":0,"quarto_mimetype":"application/vnd.jupyter.widget-view+json"}
+</script>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Optimizing embedding for '\n'
+step     0: loss 4.873875
+step  5000: loss 0.014350
+step 10000: loss 0.001145
+step 15000: loss 0.000115
+ending training at step 15317: loss 0.000100
+Optimizing embedding for ' '
+step     0: loss 4.264826
+step  5000: loss 0.016041
+step 10000: loss 0.001354
+step 15000: loss 0.000146
+ending training at step 15895: loss 0.000100
+Optimizing embedding for '!'
+step     0: loss 4.792295
+step  5000: loss 0.012945
+step 10000: loss 0.000995
+ending training at step 14904: loss 0.000100
+Optimizing embedding for '$'
+step     0: loss 5.333682
+step  5000: loss 0.057611
+step 10000: loss 0.005992
+step 15000: loss 0.001061
+step 20000: loss 0.000405
+step 25000: loss 0.000354
+step 30000: loss 0.000354
+step 35000: loss 0.000354
+step 40000: loss 0.000354
+step 45000: loss 0.000354
+Optimizing embedding for '&amp;'
+step     0: loss 5.297050
+step  5000: loss 0.059776
+step 10000: loss 0.006204
+step 15000: loss 0.001161
+step 20000: loss 0.000509
+step 25000: loss 0.000470
+step 30000: loss 0.000469
+step 35000: loss 0.000469
+step 40000: loss 0.000469
+step 45000: loss 0.000469
+Optimizing embedding for "'"
+step     0: loss 4.427784
+step  5000: loss 0.009131
+step 10000: loss 0.000668
+ending training at step 13922: loss 0.000100
+Optimizing embedding for ','
+step     0: loss 4.773814
+step  5000: loss 0.026466
+step 10000: loss 0.002318
+step 15000: loss 0.000273
+ending training at step 17611: loss 0.000100
+Optimizing embedding for '-'
+step     0: loss 4.811676
+step  5000: loss 0.010475
+step 10000: loss 0.000778
+ending training at step 14270: loss 0.000100
+Optimizing embedding for '.'
+step     0: loss 4.674299
+step  5000: loss 0.027865
+step 10000: loss 0.002514
+step 15000: loss 0.000314
+ending training at step 18179: loss 0.000100
+Optimizing embedding for '3'
+step     0: loss 5.365812
+step  5000: loss 0.034804
+step 10000: loss 0.002992
+step 15000: loss 0.000367
+ending training at step 18638: loss 0.000100
+Optimizing embedding for ':'
+step     0: loss 4.741449
+step  5000: loss 0.012953
+step 10000: loss 0.001016
+ending training at step 14978: loss 0.000100
+Optimizing embedding for ';'
+step     0: loss 4.844121
+step  5000: loss 0.027275
+step 10000: loss 0.002482
+step 15000: loss 0.000309
+ending training at step 18092: loss 0.000100
+Optimizing embedding for '?'
+step     0: loss 5.005649
+step  5000: loss 0.012930
+step 10000: loss 0.000989
+ending training at step 14877: loss 0.000100
+Optimizing embedding for 'A'
+step     0: loss 5.113842
+step  5000: loss 0.015388
+step 10000: loss 0.001204
+step 15000: loss 0.000119
+ending training at step 15387: loss 0.000100
+Optimizing embedding for 'B'
+step     0: loss 5.215371
+step  5000: loss 0.017506
+step 10000: loss 0.001359
+step 15000: loss 0.000136
+ending training at step 15706: loss 0.000100
+Optimizing embedding for 'C'
+step     0: loss 4.807229
+step  5000: loss 0.014966
+step 10000: loss 0.001172
+step 15000: loss 0.000117
+ending training at step 15346: loss 0.000100
+Optimizing embedding for 'D'
+step     0: loss 5.175806
+step  5000: loss 0.015056
+step 10000: loss 0.001147
+step 15000: loss 0.000111
+ending training at step 15225: loss 0.000100
+Optimizing embedding for 'E'
+step     0: loss 4.931046
+step  5000: loss 0.012371
+step 10000: loss 0.000935
+ending training at step 14723: loss 0.000100
+Optimizing embedding for 'F'
+step     0: loss 5.209412
+step  5000: loss 0.017060
+step 10000: loss 0.001304
+step 15000: loss 0.000128
+ending training at step 15544: loss 0.000100
+Optimizing embedding for 'G'
+step     0: loss 5.248595
+step  5000: loss 0.013182
+step 10000: loss 0.000999
+ending training at step 14870: loss 0.000100
+Optimizing embedding for 'H'
+step     0: loss 5.152567
+step  5000: loss 0.017908
+step 10000: loss 0.001409
+step 15000: loss 0.000143
+ending training at step 15819: loss 0.000100
+Optimizing embedding for 'I'
+step     0: loss 4.950461
+step  5000: loss 0.014191
+step 10000: loss 0.001090
+step 15000: loss 0.000105
+ending training at step 15105: loss 0.000100
+Optimizing embedding for 'J'
+step     0: loss 5.064102
+step  5000: loss 0.022407
+step 10000: loss 0.001807
+step 15000: loss 0.000198
+ending training at step 16662: loss 0.000100
+Optimizing embedding for 'K'
+step     0: loss 4.987291
+step  5000: loss 0.014709
+step 10000: loss 0.001141
+step 15000: loss 0.000112
+ending training at step 15245: loss 0.000100
+Optimizing embedding for 'L'
+step     0: loss 5.183823
+step  5000: loss 0.014404
+step 10000: loss 0.001087
+step 15000: loss 0.000104
+ending training at step 15082: loss 0.000100
+Optimizing embedding for 'M'
+step     0: loss 5.154094
+step  5000: loss 0.017238
+step 10000: loss 0.001342
+step 15000: loss 0.000134
+ending training at step 15652: loss 0.000100
+Optimizing embedding for 'N'
+step     0: loss 5.410346
+step  5000: loss 0.012436
+step 10000: loss 0.000936
+ending training at step 14710: loss 0.000100
+Optimizing embedding for 'O'
+step     0: loss 4.898608
+step  5000: loss 0.011437
+step 10000: loss 0.000870
+ending training at step 14554: loss 0.000100
+Optimizing embedding for 'P'
+step     0: loss 4.961571
+step  5000: loss 0.017236
+step 10000: loss 0.001346
+step 15000: loss 0.000136
+ending training at step 15711: loss 0.000100
+Optimizing embedding for 'Q'
+step     0: loss 5.146482
+step  5000: loss 0.033291
+step 10000: loss 0.002937
+step 15000: loss 0.000374
+ending training at step 18847: loss 0.000100
+Optimizing embedding for 'R'
+step     0: loss 5.044732
+step  5000: loss 0.012409
+step 10000: loss 0.000931
+ending training at step 14697: loss 0.000100
+Optimizing embedding for 'S'
+step     0: loss 4.984651
+step  5000: loss 0.014172
+step 10000: loss 0.001097
+step 15000: loss 0.000107
+ending training at step 15141: loss 0.000100
+Optimizing embedding for 'T'
+step     0: loss 5.201972
+step  5000: loss 0.017122
+step 10000: loss 0.001325
+step 15000: loss 0.000131
+ending training at step 15602: loss 0.000100
+Optimizing embedding for 'U'
+step     0: loss 5.261983
+step  5000: loss 0.011479
+step 10000: loss 0.000862
+ending training at step 14514: loss 0.000100
+Optimizing embedding for 'V'
+step     0: loss 5.383446
+step  5000: loss 0.014711
+step 10000: loss 0.001108
+step 15000: loss 0.000105
+ending training at step 15112: loss 0.000100
+Optimizing embedding for 'W'
+step     0: loss 5.273647
+step  5000: loss 0.021252
+step 10000: loss 0.001691
+step 15000: loss 0.000176
+ending training at step 16322: loss 0.000100
+Optimizing embedding for 'X'
+step     0: loss 5.354009
+step  5000: loss 0.015729
+step 10000: loss 0.001203
+step 15000: loss 0.000117
+ending training at step 15351: loss 0.000100
+Optimizing embedding for 'Y'
+step     0: loss 5.102457
+step  5000: loss 0.012912
+step 10000: loss 0.000968
+ending training at step 14792: loss 0.000100
+Optimizing embedding for 'Z'
+step     0: loss 5.203928
+step  5000: loss 0.015488
+step 10000: loss 0.001193
+step 15000: loss 0.000116
+ending training at step 15327: loss 0.000100
+Optimizing embedding for 'a'
+step     0: loss 4.273046
+step  5000: loss 0.014312
+step 10000: loss 0.001138
+step 15000: loss 0.000115
+ending training at step 15308: loss 0.000100
+Optimizing embedding for 'b'
+step     0: loss 4.682340
+step  5000: loss 0.013746
+step 10000: loss 0.001014
+ending training at step 14867: loss 0.000100
+Optimizing embedding for 'c'
+step     0: loss 4.690848
+step  5000: loss 0.011992
+step 10000: loss 0.000885
+ending training at step 14568: loss 0.000100
+Optimizing embedding for 'd'
+step     0: loss 4.549020
+step  5000: loss 0.011544
+step 10000: loss 0.000855
+ending training at step 14477: loss 0.000100
+Optimizing embedding for 'e'
+step     0: loss 4.382761
+step  5000: loss 0.011802
+step 10000: loss 0.000924
+ending training at step 14748: loss 0.000100
+Optimizing embedding for 'f'
+step     0: loss 4.842515
+step  5000: loss 0.013852
+step 10000: loss 0.001037
+ending training at step 14940: loss 0.000100
+Optimizing embedding for 'g'
+step     0: loss 4.529458
+step  5000: loss 0.010083
+step 10000: loss 0.000754
+ending training at step 14212: loss 0.000100
+Optimizing embedding for 'h'
+step     0: loss 4.441307
+step  5000: loss 0.013397
+step 10000: loss 0.001038
+step 15000: loss 0.000101
+ending training at step 15032: loss 0.000100
+Optimizing embedding for 'i'
+step     0: loss 4.120494
+step  5000: loss 0.012618
+step 10000: loss 0.000995
+ending training at step 14945: loss 0.000100
+Optimizing embedding for 'j'
+step     0: loss 4.989840
+step  5000: loss 0.014413
+step 10000: loss 0.001074
+step 15000: loss 0.000101
+ending training at step 15031: loss 0.000100
+Optimizing embedding for 'k'
+step     0: loss 4.854855
+step  5000: loss 0.009786
+step 10000: loss 0.000723
+ending training at step 14104: loss 0.000100
+Optimizing embedding for 'l'
+step     0: loss 4.350724
+step  5000: loss 0.011370
+step 10000: loss 0.000853
+ending training at step 14497: loss 0.000100
+Optimizing embedding for 'm'
+step     0: loss 4.619439
+step  5000: loss 0.012355
+step 10000: loss 0.000939
+ending training at step 14752: loss 0.000100
+Optimizing embedding for 'n'
+step     0: loss 4.462899
+step  5000: loss 0.012318
+step 10000: loss 0.000935
+ending training at step 14727: loss 0.000100
+Optimizing embedding for 'o'
+step     0: loss 4.410997
+step  5000: loss 0.014322
+step 10000: loss 0.001139
+step 15000: loss 0.000113
+ending training at step 15282: loss 0.000100
+Optimizing embedding for 'p'
+step     0: loss 4.570235
+step  5000: loss 0.011398
+step 10000: loss 0.000837
+ending training at step 14423: loss 0.000100
+Optimizing embedding for 'q'
+step     0: loss 5.127600
+step  5000: loss 0.012552
+step 10000: loss 0.000936
+ending training at step 14693: loss 0.000100
+Optimizing embedding for 'r'
+step     0: loss 4.435355
+step  5000: loss 0.011171
+step 10000: loss 0.000845
+ending training at step 14497: loss 0.000100
+Optimizing embedding for 's'
+step     0: loss 4.184333
+step  5000: loss 0.011847
+step 10000: loss 0.000928
+ending training at step 14775: loss 0.000100
+Optimizing embedding for 't'
+step     0: loss 4.536841
+step  5000: loss 0.013432
+step 10000: loss 0.001021
+ending training at step 14953: loss 0.000100
+Optimizing embedding for 'u'
+step     0: loss 4.413103
+step  5000: loss 0.010647
+step 10000: loss 0.000790
+ending training at step 14312: loss 0.000100
+Optimizing embedding for 'v'
+step     0: loss 4.691413
+step  5000: loss 0.011501
+step 10000: loss 0.000860
+ending training at step 14509: loss 0.000100
+Optimizing embedding for 'w'
+step     0: loss 4.491944
+step  5000: loss 0.013307
+step 10000: loss 0.000995
+ending training at step 14859: loss 0.000100
+Optimizing embedding for 'x'
+step     0: loss 4.986167
+step  5000: loss 0.011315
+step 10000: loss 0.000835
+ending training at step 14424: loss 0.000100
+Optimizing embedding for 'y'
+step     0: loss 4.736977
+step  5000: loss 0.011138
+step 10000: loss 0.000828
+ending training at step 14408: loss 0.000100
+Optimizing embedding for 'z'
+step     0: loss 4.985116
+step  5000: loss 0.009728
+step 10000: loss 0.000710
+ending training at step 14037: loss 0.000100</code></pre>
+</div>
+</div>
+</section>
+<section id="block" class="level3">
+<h3 class="anchored" data-anchor-id="block">1 Block</h3>
+<p>Learn embeddings from the last block (block index 5 onwards):</p>
+<div id="cell-43" class="cell">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>block_n_on <span class="op">=</span> <span class="dv">5</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>embedding_to_logits_function <span class="op">=</span> block_n_on_function(m, n<span class="op">=</span>block_n_on)</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>sub_dir <span class="op">=</span> results_folder <span class="op">/</span> <span class="ss">f'block_</span><span class="sc">{</span>block_n_on<span class="sc">}</span><span class="ss">'</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>sub_dir.mkdir(exist_ok<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-44" class="cell">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> target_char <span class="kw">in</span> tqdm(tokenizer.chars):</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>    multi_embs, _ <span class="op">=</span> learn_embedding_for_char(</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>        target_char, embedding_to_logits_function, n_embeddings_to_learn<span class="op">=</span>n_embeddings_to_learn</span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>    torch.save(multi_embs, sub_dir <span class="op">/</span> <span class="ss">f'</span><span class="sc">{</span>filename_for_token(target_char)<span class="sc">}</span><span class="ss">.pt'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"ba503ef0b86540239823f30356eb842c","version_major":2,"version_minor":0,"quarto_mimetype":"application/vnd.jupyter.widget-view+json"}
+</script>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Optimizing embedding for '\n'
+step     0: loss 5.347430
+step  5000: loss 0.007386
+step 10000: loss 0.000657
+ending training at step 14478: loss 0.000100
+Optimizing embedding for ' '
+step     0: loss 3.744530
+step  5000: loss 0.005794
+step 10000: loss 0.000533
+ending training at step 14041: loss 0.000100
+Optimizing embedding for '!'
+step     0: loss 6.476709
+step  5000: loss 0.007308
+step 10000: loss 0.000641
+ending training at step 14254: loss 0.000100
+Optimizing embedding for '$'
+step     0: loss 8.133106
+step  5000: loss 0.085841
+step 10000: loss 0.009670
+step 15000: loss 0.001712
+step 20000: loss 0.000555
+step 25000: loss 0.000398
+step 30000: loss 0.000378
+step 35000: loss 0.000371
+step 40000: loss 0.000367
+step 45000: loss 0.000365
+Optimizing embedding for '&amp;'
+step     0: loss 7.565117
+step  5000: loss 0.093037
+step 10000: loss 0.010646
+step 15000: loss 0.002142
+step 20000: loss 0.000802
+step 25000: loss 0.000548
+step 30000: loss 0.000499
+step 35000: loss 0.000487
+step 40000: loss 0.000483
+step 45000: loss 0.000481
+Optimizing embedding for "'"
+step     0: loss 5.156186
+step  5000: loss 0.005823
+step 10000: loss 0.000452
+ending training at step 13204: loss 0.000100
+Optimizing embedding for ','
+step     0: loss 4.808379
+step  5000: loss 0.015074
+step 10000: loss 0.001522
+step 15000: loss 0.000231
+ending training at step 17605: loss 0.000100
+Optimizing embedding for '-'
+step     0: loss 5.895603
+step  5000: loss 0.005756
+step 10000: loss 0.000450
+ending training at step 13249: loss 0.000100
+Optimizing embedding for '.'
+step     0: loss 6.209974
+step  5000: loss 0.023172
+step 10000: loss 0.002623
+step 15000: loss 0.000436
+step 20000: loss 0.000104
+ending training at step 20149: loss 0.000100
+Optimizing embedding for '3'
+step     0: loss 7.941002
+step  5000: loss 0.044592
+step 10000: loss 0.004487
+step 15000: loss 0.000611
+step 20000: loss 0.000118
+ending training at step 20613: loss 0.000100
+Optimizing embedding for ':'
+step     0: loss 6.865605
+step  5000: loss 0.006139
+step 10000: loss 0.000501
+ending training at step 13679: loss 0.000100
+Optimizing embedding for ';'
+step     0: loss 6.623376
+step  5000: loss 0.028730
+step 10000: loss 0.002908
+step 15000: loss 0.000418
+ending training at step 19428: loss 0.000100
+Optimizing embedding for '?'
+step     0: loss 6.516698
+step  5000: loss 0.007135
+step 10000: loss 0.000624
+ending training at step 14201: loss 0.000100
+Optimizing embedding for 'A'
+step     0: loss 7.063316
+step  5000: loss 0.008427
+step 10000: loss 0.000698
+ending training at step 14472: loss 0.000100
+Optimizing embedding for 'B'
+step     0: loss 7.246926
+step  5000: loss 0.011748
+step 10000: loss 0.000978
+step 15000: loss 0.000113
+ending training at step 15292: loss 0.000100
+Optimizing embedding for 'C'
+step     0: loss 7.449971
+step  5000: loss 0.008698
+step 10000: loss 0.000758
+ending training at step 14731: loss 0.000100
+Optimizing embedding for 'D'
+step     0: loss 6.771146
+step  5000: loss 0.007700
+step 10000: loss 0.000649
+ending training at step 14250: loss 0.000100
+Optimizing embedding for 'E'
+step     0: loss 7.121366
+step  5000: loss 0.006511
+step 10000: loss 0.000531
+ending training at step 13697: loss 0.000100
+Optimizing embedding for 'F'
+step     0: loss 7.631640
+step  5000: loss 0.013424
+step 10000: loss 0.001119
+step 15000: loss 0.000125
+ending training at step 15536: loss 0.000100
+Optimizing embedding for 'G'
+step     0: loss 7.739057
+step  5000: loss 0.008573
+step 10000: loss 0.000703
+ending training at step 14341: loss 0.000100
+Optimizing embedding for 'H'
+step     0: loss 6.870086
+step  5000: loss 0.011302
+step 10000: loss 0.000955
+step 15000: loss 0.000113
+ending training at step 15317: loss 0.000100
+Optimizing embedding for 'I'
+step     0: loss 6.524743
+step  5000: loss 0.006385
+step 10000: loss 0.000516
+ending training at step 13674: loss 0.000100
+Optimizing embedding for 'J'
+step     0: loss 6.918394
+step  5000: loss 0.021348
+step 10000: loss 0.002077
+step 15000: loss 0.000270
+ending training at step 17681: loss 0.000100
+Optimizing embedding for 'K'
+step     0: loss 7.540547
+step  5000: loss 0.011649
+step 10000: loss 0.001001
+step 15000: loss 0.000115
+ending training at step 15346: loss 0.000100
+Optimizing embedding for 'L'
+step     0: loss 7.171153
+step  5000: loss 0.007544
+step 10000: loss 0.000624
+ending training at step 14132: loss 0.000100
+Optimizing embedding for 'M'
+step     0: loss 7.511839
+step  5000: loss 0.012008
+step 10000: loss 0.000992
+step 15000: loss 0.000115
+ending training at step 15342: loss 0.000100
+Optimizing embedding for 'N'
+step     0: loss 7.237311
+step  5000: loss 0.005385
+step 10000: loss 0.000439
+ending training at step 13250: loss 0.000100
+Optimizing embedding for 'O'
+step     0: loss 7.000911
+step  5000: loss 0.005379
+step 10000: loss 0.000424
+ending training at step 13159: loss 0.000100
+Optimizing embedding for 'P'
+step     0: loss 6.761536
+step  5000: loss 0.012577
+step 10000: loss 0.001089
+step 15000: loss 0.000130
+ending training at step 15663: loss 0.000100
+Optimizing embedding for 'Q'
+step     0: loss 7.574077
+step  5000: loss 0.036536
+step 10000: loss 0.003842
+step 15000: loss 0.000569
+step 20000: loss 0.000121
+ending training at step 20763: loss 0.000100
+Optimizing embedding for 'R'
+step     0: loss 7.027799
+step  5000: loss 0.007081
+step 10000: loss 0.000573
+ending training at step 13866: loss 0.000100
+Optimizing embedding for 'S'
+step     0: loss 7.332571
+step  5000: loss 0.008095
+step 10000: loss 0.000670
+ending training at step 14317: loss 0.000100
+Optimizing embedding for 'T'
+step     0: loss 7.321306
+step  5000: loss 0.007811
+step 10000: loss 0.000704
+ending training at step 14660: loss 0.000100
+Optimizing embedding for 'U'
+step     0: loss 7.908830
+step  5000: loss 0.006525
+step 10000: loss 0.000512
+ending training at step 13557: loss 0.000100
+Optimizing embedding for 'V'
+step     0: loss 7.760444
+step  5000: loss 0.009805
+step 10000: loss 0.000795
+ending training at step 14672: loss 0.000100
+Optimizing embedding for 'W'
+step     0: loss 7.053877
+step  5000: loss 0.013178
+step 10000: loss 0.001213
+step 15000: loss 0.000152
+ending training at step 16094: loss 0.000100
+Optimizing embedding for 'X'
+step     0: loss 8.160125
+step  5000: loss 0.012235
+step 10000: loss 0.001112
+step 15000: loss 0.000132
+ending training at step 15675: loss 0.000100
+Optimizing embedding for 'Y'
+step     0: loss 7.260418
+step  5000: loss 0.007429
+step 10000: loss 0.000593
+ending training at step 13927: loss 0.000100
+Optimizing embedding for 'Z'
+step     0: loss 7.773640
+step  5000: loss 0.012257
+step 10000: loss 0.001111
+step 15000: loss 0.000131
+ending training at step 15655: loss 0.000100
+Optimizing embedding for 'a'
+step     0: loss 4.141507
+step  5000: loss 0.003693
+step 10000: loss 0.000306
+ending training at step 12568: loss 0.000100
+Optimizing embedding for 'b'
+step     0: loss 5.297385
+step  5000: loss 0.004673
+step 10000: loss 0.000380
+ending training at step 12962: loss 0.000100
+Optimizing embedding for 'c'
+step     0: loss 5.074947
+step  5000: loss 0.003856
+step 10000: loss 0.000303
+ending training at step 12421: loss 0.000100
+Optimizing embedding for 'd'
+step     0: loss 5.328892
+step  5000: loss 0.003671
+step 10000: loss 0.000276
+ending training at step 12169: loss 0.000100
+Optimizing embedding for 'e'
+step     0: loss 4.090889
+step  5000: loss 0.003495
+step 10000: loss 0.000280
+ending training at step 12263: loss 0.000100
+Optimizing embedding for 'f'
+step     0: loss 5.071789
+step  5000: loss 0.005350
+step 10000: loss 0.000426
+ending training at step 13240: loss 0.000100
+Optimizing embedding for 'g'
+step     0: loss 4.969716
+step  5000: loss 0.003954
+step 10000: loss 0.000301
+ending training at step 12341: loss 0.000100
+Optimizing embedding for 'h'
+step     0: loss 4.788130
+step  5000: loss 0.004963
+step 10000: loss 0.000418
+ending training at step 13255: loss 0.000100
+Optimizing embedding for 'i'
+step     0: loss 3.821693
+step  5000: loss 0.003995
+step 10000: loss 0.000322
+ending training at step 12586: loss 0.000100
+Optimizing embedding for 'j'
+step     0: loss 6.758059
+step  5000: loss 0.013991
+step 10000: loss 0.001127
+step 15000: loss 0.000120
+ending training at step 15430: loss 0.000100
+Optimizing embedding for 'k'
+step     0: loss 6.332606
+step  5000: loss 0.005338
+step 10000: loss 0.000403
+ending training at step 12947: loss 0.000100
+Optimizing embedding for 'l'
+step     0: loss 4.604065
+step  5000: loss 0.003959
+step 10000: loss 0.000300
+ending training at step 12355: loss 0.000100
+Optimizing embedding for 'm'
+step     0: loss 5.128067
+step  5000: loss 0.005043
+step 10000: loss 0.000390
+ending training at step 12985: loss 0.000100
+Optimizing embedding for 'n'
+step     0: loss 4.884213
+step  5000: loss 0.004264
+step 10000: loss 0.000326
+ending training at step 12533: loss 0.000100
+Optimizing embedding for 'o'
+step     0: loss 4.753374
+step  5000: loss 0.005272
+step 10000: loss 0.000444
+ending training at step 13389: loss 0.000100
+Optimizing embedding for 'p'
+step     0: loss 5.534964
+step  5000: loss 0.004984
+step 10000: loss 0.000374
+ending training at step 12822: loss 0.000100
+Optimizing embedding for 'q'
+step     0: loss 6.771389
+step  5000: loss 0.009553
+step 10000: loss 0.000762
+ending training at step 14440: loss 0.000100
+Optimizing embedding for 'r'
+step     0: loss 4.422514
+step  5000: loss 0.004006
+step 10000: loss 0.000300
+ending training at step 12342: loss 0.000100
+Optimizing embedding for 's'
+step     0: loss 4.241723
+step  5000: loss 0.004333
+step 10000: loss 0.000347
+ending training at step 12766: loss 0.000100
+Optimizing embedding for 't'
+step     0: loss 4.483743
+step  5000: loss 0.003839
+step 10000: loss 0.000315
+ending training at step 12538: loss 0.000100
+Optimizing embedding for 'u'
+step     0: loss 5.174875
+step  5000: loss 0.004506
+step 10000: loss 0.000343
+ending training at step 12646: loss 0.000100
+Optimizing embedding for 'v'
+step     0: loss 5.617326
+step  5000: loss 0.005383
+step 10000: loss 0.000417
+ending training at step 13078: loss 0.000100
+Optimizing embedding for 'w'
+step     0: loss 4.738924
+step  5000: loss 0.005459
+step 10000: loss 0.000426
+ending training at step 13187: loss 0.000100
+Optimizing embedding for 'x'
+step     0: loss 7.199396
+step  5000: loss 0.007838
+step 10000: loss 0.000628
+ending training at step 14019: loss 0.000100
+Optimizing embedding for 'y'
+step     0: loss 5.467407
+step  5000: loss 0.004450
+step 10000: loss 0.000350
+ending training at step 12694: loss 0.000100
+Optimizing embedding for 'z'
+step     0: loss 7.097597
+step  5000: loss 0.006247
+step 10000: loss 0.000488
+ending training at step 13385: loss 0.000100</code></pre>
+</div>
+</div>
+<section id="with-1000-embeddings-per-token" class="level4">
+<h4 class="anchored" data-anchor-id="with-1000-embeddings-per-token">With 1000 embeddings per token</h4>
+<p>I wanted to see if we got better results with more embeddings, so let’s learn 1000 embeddings / token for the last block.</p>
+<div id="cell-46" class="cell">
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>block_n_on <span class="op">=</span> <span class="dv">5</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>n_embeddings_to_learn<span class="op">=</span><span class="dv">1000</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>embedding_to_logits_function <span class="op">=</span> block_n_on_function(m, n<span class="op">=</span>block_n_on)</span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>sub_dir <span class="op">=</span> results_folder <span class="op">/</span> <span class="ss">f'block_</span><span class="sc">{</span>block_n_on<span class="sc">}</span><span class="ss">_</span><span class="sc">{</span>n_embeddings_to_learn<span class="sc">}</span><span class="ss">'</span></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>sub_dir.mkdir(exist_ok<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-47" class="cell">
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> target_char <span class="kw">in</span> tqdm(tokenizer.chars):</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>    multi_embs, _ <span class="op">=</span> learn_embedding_for_char(</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>        target_char, embedding_to_logits_function, n_embeddings_to_learn<span class="op">=</span>n_embeddings_to_learn</span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>    torch.save(multi_embs, sub_dir <span class="op">/</span> <span class="ss">f'</span><span class="sc">{</span>filename_for_token(target_char)<span class="sc">}</span><span class="ss">.pt'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"dddf0b8d388345f48df347f23690e54e","version_major":2,"version_minor":0,"quarto_mimetype":"application/vnd.jupyter.widget-view+json"}
+</script>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Optimizing embedding for 'n'
+step     0: loss 4.559832
+step  5000: loss 0.004011
+step 10000: loss 0.000314
+ending training at step 12531: loss 0.000100
+Optimizing embedding for 'o'
+step     0: loss 4.772153
+step  5000: loss 0.005388
+step 10000: loss 0.000453
+ending training at step 13553: loss 0.000100
+Optimizing embedding for 'p'
+step     0: loss 5.451766
+step  5000: loss 0.004887
+step 10000: loss 0.000375
+ending training at step 12905: loss 0.000100
+Optimizing embedding for 'q'
+step     0: loss 6.712268
+step  5000: loss 0.009738
+step 10000: loss 0.000777
+ending training at step 14641: loss 0.000100
+Optimizing embedding for 'r'
+step     0: loss 4.504239
+step  5000: loss 0.003917
+step 10000: loss 0.000304
+ending training at step 12451: loss 0.000100
+Optimizing embedding for 's'
+step     0: loss 3.967334
+step  5000: loss 0.004284
+step 10000: loss 0.000346
+ending training at step 12817: loss 0.000100
+Optimizing embedding for 't'
+step     0: loss 4.246644
+step  5000: loss 0.003862
+step 10000: loss 0.000315
+ending training at step 12615: loss 0.000100
+Optimizing embedding for 'u'
+step     0: loss 5.164997
+step  5000: loss 0.004617
+step 10000: loss 0.000360
+ending training at step 12831: loss 0.000100
+Optimizing embedding for 'v'
+step     0: loss 5.784395
+step  5000: loss 0.005645
+step 10000: loss 0.000439
+ending training at step 13280: loss 0.000100
+Optimizing embedding for 'w'
+step     0: loss 5.032755
+step  5000: loss 0.005488
+step 10000: loss 0.000441
+ending training at step 13393: loss 0.000100
+Optimizing embedding for 'x'
+step     0: loss 7.050308
+step  5000: loss 0.007867
+step 10000: loss 0.000636
+ending training at step 14167: loss 0.000100
+Optimizing embedding for 'y'
+step     0: loss 5.264086
+step  5000: loss 0.004477
+step 10000: loss 0.000350
+ending training at step 12751: loss 0.000100
+Optimizing embedding for 'z'
+step     0: loss 7.208733
+step  5000: loss 0.006133
+step 10000: loss 0.000482
+ending training at step 13441: loss 0.000100</code></pre>
+</div>
+</div>
+</section>
+<section id="with-5000-embeddings-per-token" class="level4">
+<h4 class="anchored" data-anchor-id="with-5000-embeddings-per-token">With 5000 embeddings per token</h4>
+<p>Let’s see if even more embeddings help: learn 5000 embeddings/token.</p>
+<div id="cell-50" class="cell">
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>block_n_on <span class="op">=</span> <span class="dv">5</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>n_embeddings_to_learn<span class="op">=</span><span class="dv">5000</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>embedding_to_logits_function <span class="op">=</span> block_n_on_function(m, n<span class="op">=</span>block_n_on)</span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>sub_dir <span class="op">=</span> results_folder <span class="op">/</span> <span class="ss">f'block_</span><span class="sc">{</span>block_n_on<span class="sc">}</span><span class="ss">_</span><span class="sc">{</span>n_embeddings_to_learn<span class="sc">}</span><span class="ss">'</span></span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>sub_dir.mkdir(exist_ok<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(sub_dir)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>/storage/learned_embeddings/block_5_5000</code></pre>
+</div>
+</div>
+<div id="cell-51" class="cell">
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> target_char <span class="kw">in</span> tqdm(tokenizer.chars):</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>    multi_embs, _ <span class="op">=</span> learn_embedding_for_char(</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>        target_char, embedding_to_logits_function, n_embeddings_to_learn<span class="op">=</span>n_embeddings_to_learn</span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>    torch.save(multi_embs, sub_dir <span class="op">/</span> <span class="ss">f'</span><span class="sc">{</span>filename_for_token(target_char)<span class="sc">}</span><span class="ss">.pt'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"d1a145d0360e4ba09016bc6d1ab92aea","version_major":2,"version_minor":0,"quarto_mimetype":"application/vnd.jupyter.widget-view+json"}
+</script>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Optimizing embedding for '\n'
+step     0: loss 5.594407
+step  5000: loss 0.007269
+step 10000: loss 0.000696
+step 15000: loss 0.000120
+ending training at step 15687: loss 0.000100
+Optimizing embedding for ' '
+step     0: loss 3.438382
+step  5000: loss 0.005430
+step 10000: loss 0.000537
+step 15000: loss 0.000103
+ending training at step 15140: loss 0.000100
+Optimizing embedding for '!'
+step     0: loss 6.517096
+step  5000: loss 0.007284
+step 10000: loss 0.000668
+step 15000: loss 0.000103
+ending training at step 15083: loss 0.000100
+Optimizing embedding for '$'
+step     0: loss 7.965337
+step  5000: loss 0.082970
+step 10000: loss 0.009700
+step 15000: loss 0.001987
+step 20000: loss 0.000854
+step 25000: loss 0.000615
+step 30000: loss 0.000530
+step 35000: loss 0.000489
+step 40000: loss 0.000464
+step 45000: loss 0.000448
+Optimizing embedding for '&amp;'
+step     0: loss 7.658935
+step  5000: loss 0.095831
+step 10000: loss 0.011111
+step 15000: loss 0.002514
+step 20000: loss 0.001186
+step 25000: loss 0.000888
+step 30000: loss 0.000776
+step 35000: loss 0.000716
+step 40000: loss 0.000678
+step 45000: loss 0.000651
+Optimizing embedding for "'"
+step     0: loss 5.282728
+step  5000: loss 0.005876
+step 10000: loss 0.000483
+ending training at step 13854: loss 0.000100
+Optimizing embedding for ','
+step     0: loss 5.069627
+step  5000: loss 0.015742
+step 10000: loss 0.001677
+step 15000: loss 0.000330
+step 20000: loss 0.000136
+ending training at step 23151: loss 0.000100
+Optimizing embedding for '-'
+step     0: loss 5.793747
+step  5000: loss 0.005741
+step 10000: loss 0.000474
+ending training at step 13813: loss 0.000100
+Optimizing embedding for '.'
+step     0: loss 6.198037
+step  5000: loss 0.023380
+step 10000: loss 0.002735
+step 15000: loss 0.000564
+step 20000: loss 0.000232
+step 25000: loss 0.000152
+step 30000: loss 0.000118
+ending training at step 34704: loss 0.000100
+Optimizing embedding for '3'
+step     0: loss 7.771849
+step  5000: loss 0.044660
+step 10000: loss 0.004647
+step 15000: loss 0.000780
+step 20000: loss 0.000267
+step 25000: loss 0.000160
+step 30000: loss 0.000120
+ending training at step 34799: loss 0.000100
+Optimizing embedding for ':'
+step     0: loss 6.816797
+step  5000: loss 0.006008
+step 10000: loss 0.000522
+ending training at step 14318: loss 0.000100
+Optimizing embedding for ';'
+step     0: loss 6.429393
+step  5000: loss 0.027733
+step 10000: loss 0.002910
+step 15000: loss 0.000530
+step 20000: loss 0.000199
+step 25000: loss 0.000123
+ending training at step 28550: loss 0.000100
+Optimizing embedding for '?'
+step     0: loss 6.720572
+step  5000: loss 0.007352
+step 10000: loss 0.000670
+step 15000: loss 0.000103
+ending training at step 15092: loss 0.000100
+Optimizing embedding for 'A'
+step     0: loss 7.125983
+step  5000: loss 0.008442
+step 10000: loss 0.000733
+step 15000: loss 0.000111
+ending training at step 15360: loss 0.000100
+Optimizing embedding for 'B'
+step     0: loss 7.413654
+step  5000: loss 0.011906
+step 10000: loss 0.001031
+step 15000: loss 0.000155
+ending training at step 16551: loss 0.000100
+Optimizing embedding for 'C'
+step     0: loss 7.379269
+step  5000: loss 0.008486
+step 10000: loss 0.000769
+step 15000: loss 0.000120
+ending training at step 15637: loss 0.000100
+Optimizing embedding for 'D'
+step     0: loss 6.879560
+step  5000: loss 0.007789
+step 10000: loss 0.000685
+step 15000: loss 0.000103
+ending training at step 15098: loss 0.000100
+Optimizing embedding for 'E'
+step     0: loss 7.116797
+step  5000: loss 0.006545
+step 10000: loss 0.000557
+ending training at step 14334: loss 0.000100
+Optimizing embedding for 'F'
+step     0: loss 7.536552
+step  5000: loss 0.013105
+step 10000: loss 0.001142
+step 15000: loss 0.000168
+ending training at step 16820: loss 0.000100
+Optimizing embedding for 'G'
+step     0: loss 7.432269
+step  5000: loss 0.008491
+step 10000: loss 0.000720
+step 15000: loss 0.000102
+ending training at step 15066: loss 0.000100
+Optimizing embedding for 'H'
+step     0: loss 6.976287
+step  5000: loss 0.011694
+step 10000: loss 0.001028
+step 15000: loss 0.000160
+ending training at step 16740: loss 0.000100
+Optimizing embedding for 'I'
+step     0: loss 6.453108
+step  5000: loss 0.006361
+step 10000: loss 0.000535
+ending training at step 14314: loss 0.000100
+Optimizing embedding for 'J'
+step     0: loss 7.170426
+step  5000: loss 0.022446
+step 10000: loss 0.002219
+step 15000: loss 0.000368
+step 20000: loss 0.000125
+ending training at step 21722: loss 0.000100
+Optimizing embedding for 'K'
+step     0: loss 7.532418
+step  5000: loss 0.011812
+step 10000: loss 0.001049
+step 15000: loss 0.000156
+ending training at step 16562: loss 0.000100
+Optimizing embedding for 'L'
+step     0: loss 7.310787
+step  5000: loss 0.007852
+step 10000: loss 0.000672
+ending training at step 14940: loss 0.000100
+Optimizing embedding for 'M'
+step     0: loss 7.446343
+step  5000: loss 0.011834
+step 10000: loss 0.001031
+step 15000: loss 0.000156
+ending training at step 16586: loss 0.000100
+Optimizing embedding for 'N'
+step     0: loss 7.390759
+step  5000: loss 0.005521
+step 10000: loss 0.000460
+ending training at step 13744: loss 0.000100
+Optimizing embedding for 'O'
+step     0: loss 7.084028
+step  5000: loss 0.005356
+step 10000: loss 0.000442
+ending training at step 13628: loss 0.000100
+Optimizing embedding for 'P'
+step     0: loss 7.220920
+step  5000: loss 0.013608
+step 10000: loss 0.001216
+step 15000: loss 0.000188
+ending training at step 17391: loss 0.000100
+Optimizing embedding for 'Q'
+step     0: loss 7.621984
+step  5000: loss 0.036300
+step 10000: loss 0.003947
+step 15000: loss 0.000723
+step 20000: loss 0.000264
+step 25000: loss 0.000163
+step 30000: loss 0.000125
+step 35000: loss 0.000104
+ending training at step 36355: loss 0.000100
+Optimizing embedding for 'R'
+step     0: loss 6.963523
+step  5000: loss 0.007048
+step 10000: loss 0.000594
+ending training at step 14513: loss 0.000100
+Optimizing embedding for 'S'
+step     0: loss 7.216874
+step  5000: loss 0.007949
+step 10000: loss 0.000687
+step 15000: loss 0.000102
+ending training at step 15060: loss 0.000100
+Optimizing embedding for 'T'
+step     0: loss 7.100054
+step  5000: loss 0.007693
+step 10000: loss 0.000721
+step 15000: loss 0.000117
+ending training at step 15547: loss 0.000100
+Optimizing embedding for 'U'
+step     0: loss 7.833190
+step  5000: loss 0.006543
+step 10000: loss 0.000537
+ending training at step 14108: loss 0.000100
+Optimizing embedding for 'V'
+step     0: loss 7.466230
+step  5000: loss 0.009653
+step 10000: loss 0.000824
+step 15000: loss 0.000118
+ending training at step 15542: loss 0.000100
+Optimizing embedding for 'W'
+step     0: loss 6.921437
+step  5000: loss 0.013066
+step 10000: loss 0.001235
+step 15000: loss 0.000202
+ending training at step 17881: loss 0.000100
+Optimizing embedding for 'X'
+step     0: loss 7.990481
+step  5000: loss 0.012197
+step 10000: loss 0.001153
+step 15000: loss 0.000179
+ending training at step 17133: loss 0.000100
+Optimizing embedding for 'Y'
+step     0: loss 7.431907
+step  5000: loss 0.007709
+step 10000: loss 0.000641
+ending training at step 14677: loss 0.000100
+Optimizing embedding for 'Z'
+step     0: loss 8.011966
+step  5000: loss 0.012419
+step 10000: loss 0.001168
+step 15000: loss 0.000180
+ending training at step 17139: loss 0.000100
+Optimizing embedding for 'a'
+step     0: loss 4.276280
+step  5000: loss 0.003790
+step 10000: loss 0.000337
+ending training at step 13200: loss 0.000100
+Optimizing embedding for 'b'
+step     0: loss 5.436181
+step  5000: loss 0.004718
+step 10000: loss 0.000403
+ending training at step 13505: loss 0.000100
+Optimizing embedding for 'c'
+step     0: loss 5.123799
+step  5000: loss 0.004070
+step 10000: loss 0.000332
+ending training at step 12919: loss 0.000100
+Optimizing embedding for 'd'
+step     0: loss 5.108806
+step  5000: loss 0.003689
+step 10000: loss 0.000294
+ending training at step 12559: loss 0.000100
+Optimizing embedding for 'e'
+step     0: loss 3.921755
+step  5000: loss 0.003373
+step 10000: loss 0.000291
+ending training at step 12680: loss 0.000100
+Optimizing embedding for 'f'
+step     0: loss 5.214041
+step  5000: loss 0.005233
+step 10000: loss 0.000446
+ending training at step 13841: loss 0.000100
+Optimizing embedding for 'g'
+step     0: loss 5.360433
+step  5000: loss 0.004195
+step 10000: loss 0.000333
+ending training at step 12860: loss 0.000100
+Optimizing embedding for 'h'
+step     0: loss 4.889000
+step  5000: loss 0.005076
+step 10000: loss 0.000449
+ending training at step 13988: loss 0.000100
+Optimizing embedding for 'i'
+step     0: loss 3.911887
+step  5000: loss 0.004062
+step 10000: loss 0.000353
+ending training at step 13265: loss 0.000100
+Optimizing embedding for 'j'
+step     0: loss 6.693477
+step  5000: loss 0.013910
+step 10000: loss 0.001173
+step 15000: loss 0.000168
+ending training at step 16807: loss 0.000100
+Optimizing embedding for 'k'
+step     0: loss 6.102386
+step  5000: loss 0.005243
+step 10000: loss 0.000413
+ending training at step 13369: loss 0.000100
+Optimizing embedding for 'l'
+step     0: loss 4.647025
+step  5000: loss 0.003966
+step 10000: loss 0.000324
+ending training at step 12858: loss 0.000100
+Optimizing embedding for 'm'
+step     0: loss 4.994263
+step  5000: loss 0.004958
+step 10000: loss 0.000411
+ending training at step 13551: loss 0.000100
+Optimizing embedding for 'n'
+step     0: loss 4.590691
+step  5000: loss 0.004071
+step 10000: loss 0.000335
+ending training at step 12967: loss 0.000100
+Optimizing embedding for 'o'
+step     0: loss 4.697253
+step  5000: loss 0.005286
+step 10000: loss 0.000470
+ending training at step 14138: loss 0.000100
+Optimizing embedding for 'p'
+step     0: loss 5.542086
+step  5000: loss 0.004964
+step 10000: loss 0.000399
+ending training at step 13345: loss 0.000100
+Optimizing embedding for 'q'
+step     0: loss 6.669010
+step  5000: loss 0.009706
+step 10000: loss 0.000805
+step 15000: loss 0.000112
+ending training at step 15362: loss 0.000100
+Optimizing embedding for 'r'
+step     0: loss 4.539549
+step  5000: loss 0.003973
+step 10000: loss 0.000325
+ending training at step 12862: loss 0.000100
+Optimizing embedding for 's'
+step     0: loss 3.938461
+step  5000: loss 0.004231
+step 10000: loss 0.000364
+ending training at step 13304: loss 0.000100
+Optimizing embedding for 't'
+step     0: loss 4.229414
+step  5000: loss 0.003895
+step 10000: loss 0.000332
+ending training at step 13033: loss 0.000100
+Optimizing embedding for 'u'
+step     0: loss 5.161785
+step  5000: loss 0.004642
+step 10000: loss 0.000378
+ending training at step 13232: loss 0.000100
+Optimizing embedding for 'v'
+step     0: loss 5.768043
+step  5000: loss 0.005681
+step 10000: loss 0.000460
+ending training at step 13746: loss 0.000100
+Optimizing embedding for 'w'
+step     0: loss 4.945869
+step  5000: loss 0.005471
+step 10000: loss 0.000461
+ending training at step 13916: loss 0.000100
+Optimizing embedding for 'x'
+step     0: loss 7.026910
+step  5000: loss 0.007881
+step 10000: loss 0.000660
+ending training at step 14750: loss 0.000100
+Optimizing embedding for 'y'
+step     0: loss 5.312238
+step  5000: loss 0.004572
+step 10000: loss 0.000374
+ending training at step 13189: loss 0.000100
+Optimizing embedding for 'z'
+step     0: loss 7.262398
+step  5000: loss 0.006220
+step 10000: loss 0.000506
+ending training at step 13876: loss 0.000100</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="blocks" class="level3">
+<h3 class="anchored" data-anchor-id="blocks">2 Blocks</h3>
+<p>Learn embeddings for last 2 blocks:</p>
+<div id="cell-54" class="cell">
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>block_n_on <span class="op">=</span> <span class="dv">4</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>embedding_to_logits_function <span class="op">=</span> block_n_on_function(m, n<span class="op">=</span>block_n_on)</span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>sub_dir <span class="op">=</span> results_folder <span class="op">/</span> <span class="ss">f'block_</span><span class="sc">{</span>block_n_on<span class="sc">}</span><span class="ss">'</span></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>sub_dir.mkdir(exist_ok<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-55" class="cell">
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> target_char <span class="kw">in</span> tqdm(tokenizer.chars):</span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>    multi_embs, _ <span class="op">=</span> learn_embedding_for_char(</span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>        target_char, embedding_to_logits_function, n_embeddings_to_learn<span class="op">=</span>n_embeddings_to_learn</span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>    torch.save(multi_embs, sub_dir <span class="op">/</span> <span class="ss">f'</span><span class="sc">{</span>filename_for_token(target_char)<span class="sc">}</span><span class="ss">.pt'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"dbf00ba018734d49b893f864fe00ac03","version_major":2,"version_minor":0,"quarto_mimetype":"application/vnd.jupyter.widget-view+json"}
+</script>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Optimizing embedding for '\n'
+step     0: loss 5.976839
+step  5000: loss 0.008648
+step 10000: loss 0.000779
+ending training at step 14971: loss 0.000100
+Optimizing embedding for ' '
+step     0: loss 3.259852
+step  5000: loss 0.005781
+step 10000: loss 0.000530
+ending training at step 14046: loss 0.000100
+Optimizing embedding for '!'
+step     0: loss 6.406515
+step  5000: loss 0.006404
+step 10000: loss 0.000584
+ending training at step 14109: loss 0.000100
+Optimizing embedding for '$'
+step     0: loss 8.885063
+step  5000: loss 0.086875
+step 10000: loss 0.010300
+step 15000: loss 0.001904
+step 20000: loss 0.000638
+step 25000: loss 0.000440
+step 30000: loss 0.000404
+step 35000: loss 0.000392
+step 40000: loss 0.000385
+step 45000: loss 0.000380
+Optimizing embedding for '&amp;'
+step     0: loss 8.174032
+step  5000: loss 0.101088
+step 10000: loss 0.011571
+step 15000: loss 0.002427
+step 20000: loss 0.000948
+step 25000: loss 0.000637
+step 30000: loss 0.000550
+step 35000: loss 0.000525
+step 40000: loss 0.000515
+step 45000: loss 0.000509
+Optimizing embedding for "'"
+step     0: loss 5.590206
+step  5000: loss 0.005999
+step 10000: loss 0.000472
+ending training at step 13324: loss 0.000100
+Optimizing embedding for ','
+step     0: loss 5.080379
+step  5000: loss 0.017123
+step 10000: loss 0.001732
+step 15000: loss 0.000253
+ending training at step 17830: loss 0.000100
+Optimizing embedding for '-'
+step     0: loss 6.024865
+step  5000: loss 0.005053
+step 10000: loss 0.000398
+ending training at step 12993: loss 0.000100
+Optimizing embedding for '.'
+step     0: loss 6.162129
+step  5000: loss 0.023845
+step 10000: loss 0.002738
+step 15000: loss 0.000466
+step 20000: loss 0.000115
+ending training at step 20629: loss 0.000100
+Optimizing embedding for '3'
+step     0: loss 8.444758
+step  5000: loss 0.045061
+step 10000: loss 0.004679
+step 15000: loss 0.000691
+step 20000: loss 0.000141
+ending training at step 21408: loss 0.000100
+Optimizing embedding for ':'
+step     0: loss 6.848844
+step  5000: loss 0.005700
+step 10000: loss 0.000439
+ending training at step 13367: loss 0.000100
+Optimizing embedding for ';'
+step     0: loss 6.361838
+step  5000: loss 0.028255
+step 10000: loss 0.003009
+step 15000: loss 0.000456
+ending training at step 19825: loss 0.000100
+Optimizing embedding for '?'
+step     0: loss 7.329531
+step  5000: loss 0.007494
+step 10000: loss 0.000675
+ending training at step 14452: loss 0.000100
+Optimizing embedding for 'A'
+step     0: loss 7.462622
+step  5000: loss 0.006849
+step 10000: loss 0.000583
+ending training at step 14158: loss 0.000100
+Optimizing embedding for 'B'
+step     0: loss 7.803836
+step  5000: loss 0.010118
+step 10000: loss 0.000860
+step 15000: loss 0.000106
+ending training at step 15146: loss 0.000100
+Optimizing embedding for 'C'
+step     0: loss 7.431258
+step  5000: loss 0.006722
+step 10000: loss 0.000611
+ending training at step 14388: loss 0.000100
+Optimizing embedding for 'D'
+step     0: loss 7.259895
+step  5000: loss 0.006637
+step 10000: loss 0.000560
+ending training at step 13992: loss 0.000100
+Optimizing embedding for 'E'
+step     0: loss 7.600525
+step  5000: loss 0.006000
+step 10000: loss 0.000471
+ending training at step 13459: loss 0.000100
+Optimizing embedding for 'F'
+step     0: loss 8.173978
+step  5000: loss 0.012628
+step 10000: loss 0.001058
+step 15000: loss 0.000124
+ending training at step 15532: loss 0.000100
+Optimizing embedding for 'G'
+step     0: loss 8.104610
+step  5000: loss 0.007674
+step 10000: loss 0.000619
+ending training at step 14100: loss 0.000100
+Optimizing embedding for 'H'
+step     0: loss 7.396293
+step  5000: loss 0.010146
+step 10000: loss 0.000857
+step 15000: loss 0.000108
+ending training at step 15205: loss 0.000100
+Optimizing embedding for 'I'
+step     0: loss 6.843120
+step  5000: loss 0.005367
+step 10000: loss 0.000421
+ending training at step 13261: loss 0.000100
+Optimizing embedding for 'J'
+step     0: loss 7.682026
+step  5000: loss 0.022274
+step 10000: loss 0.002175
+step 15000: loss 0.000297
+ending training at step 18032: loss 0.000100
+Optimizing embedding for 'K'
+step     0: loss 8.034242
+step  5000: loss 0.010027
+step 10000: loss 0.000878
+step 15000: loss 0.000106
+ending training at step 15157: loss 0.000100
+Optimizing embedding for 'L'
+step     0: loss 7.222985
+step  5000: loss 0.005296
+step 10000: loss 0.000452
+ending training at step 13489: loss 0.000100
+Optimizing embedding for 'M'
+step     0: loss 7.745698
+step  5000: loss 0.009881
+step 10000: loss 0.000868
+step 15000: loss 0.000109
+ending training at step 15222: loss 0.000100
+Optimizing embedding for 'N'
+step     0: loss 8.020021
+step  5000: loss 0.004542
+step 10000: loss 0.000362
+ending training at step 12857: loss 0.000100
+Optimizing embedding for 'O'
+step     0: loss 7.501211
+step  5000: loss 0.004781
+step 10000: loss 0.000361
+ending training at step 12822: loss 0.000100
+Optimizing embedding for 'P'
+step     0: loss 7.623023
+step  5000: loss 0.012417
+step 10000: loss 0.001034
+step 15000: loss 0.000127
+ending training at step 15612: loss 0.000100
+Optimizing embedding for 'Q'
+step     0: loss 8.380750
+step  5000: loss 0.035819
+step 10000: loss 0.004029
+step 15000: loss 0.000652
+step 20000: loss 0.000150
+ending training at step 21871: loss 0.000100
+Optimizing embedding for 'R'
+step     0: loss 7.295828
+step  5000: loss 0.006140
+step 10000: loss 0.000475
+ending training at step 13437: loss 0.000100
+Optimizing embedding for 'S'
+step     0: loss 7.297294
+step  5000: loss 0.005677
+step 10000: loss 0.000485
+ending training at step 13702: loss 0.000100
+Optimizing embedding for 'T'
+step     0: loss 7.263091
+step  5000: loss 0.005888
+step 10000: loss 0.000538
+ending training at step 14109: loss 0.000100
+Optimizing embedding for 'U'
+step     0: loss 7.996090
+step  5000: loss 0.005224
+step 10000: loss 0.000412
+ending training at step 13103: loss 0.000100
+Optimizing embedding for 'V'
+step     0: loss 7.998583
+step  5000: loss 0.008571
+step 10000: loss 0.000676
+ending training at step 14284: loss 0.000100
+Optimizing embedding for 'W'
+step     0: loss 7.612405
+step  5000: loss 0.011744
+step 10000: loss 0.001060
+step 15000: loss 0.000141
+ending training at step 15938: loss 0.000100
+Optimizing embedding for 'X'
+step     0: loss 8.956954
+step  5000: loss 0.011808
+step 10000: loss 0.001073
+step 15000: loss 0.000130
+ending training at step 15650: loss 0.000100
+Optimizing embedding for 'Y'
+step     0: loss 7.662042
+step  5000: loss 0.006023
+step 10000: loss 0.000485
+ending training at step 13533: loss 0.000100
+Optimizing embedding for 'Z'
+step     0: loss 8.492460
+step  5000: loss 0.011471
+step 10000: loss 0.001044
+step 15000: loss 0.000128
+ending training at step 15617: loss 0.000100
+Optimizing embedding for 'a'
+step     0: loss 3.811878
+step  5000: loss 0.003351
+step 10000: loss 0.000269
+ending training at step 12259: loss 0.000100
+Optimizing embedding for 'b'
+step     0: loss 5.239269
+step  5000: loss 0.003815
+step 10000: loss 0.000299
+ending training at step 12449: loss 0.000100
+Optimizing embedding for 'c'
+step     0: loss 5.045540
+step  5000: loss 0.003449
+step 10000: loss 0.000268
+ending training at step 12143: loss 0.000100
+Optimizing embedding for 'd'
+step     0: loss 4.871099
+step  5000: loss 0.003597
+step 10000: loss 0.000258
+ending training at step 11999: loss 0.000100
+Optimizing embedding for 'e'
+step     0: loss 3.123604
+step  5000: loss 0.002169
+step 10000: loss 0.000172
+ending training at step 11193: loss 0.000100
+Optimizing embedding for 'f'
+step     0: loss 5.064374
+step  5000: loss 0.005404
+step 10000: loss 0.000425
+ending training at step 13219: loss 0.000100
+Optimizing embedding for 'g'
+step     0: loss 5.496363
+step  5000: loss 0.003857
+step 10000: loss 0.000278
+ending training at step 12196: loss 0.000100
+Optimizing embedding for 'h'
+step     0: loss 4.893647
+step  5000: loss 0.004864
+step 10000: loss 0.000385
+ending training at step 13053: loss 0.000100
+Optimizing embedding for 'i'
+step     0: loss 3.567966
+step  5000: loss 0.003641
+step 10000: loss 0.000283
+ending training at step 12313: loss 0.000100
+Optimizing embedding for 'j'
+step     0: loss 6.891648
+step  5000: loss 0.012717
+step 10000: loss 0.001040
+step 15000: loss 0.000116
+ending training at step 15350: loss 0.000100
+Optimizing embedding for 'k'
+step     0: loss 6.694317
+step  5000: loss 0.005149
+step 10000: loss 0.000386
+ending training at step 12889: loss 0.000100
+Optimizing embedding for 'l'
+step     0: loss 3.972925
+step  5000: loss 0.003409
+step 10000: loss 0.000254
+ending training at step 12011: loss 0.000100
+Optimizing embedding for 'm'
+step     0: loss 4.716524
+step  5000: loss 0.004574
+step 10000: loss 0.000338
+ending training at step 12668: loss 0.000100
+Optimizing embedding for 'n'
+step     0: loss 3.947883
+step  5000: loss 0.003402
+step 10000: loss 0.000255
+ending training at step 12002: loss 0.000100
+Optimizing embedding for 'o'
+step     0: loss 4.209094
+step  5000: loss 0.004597
+step 10000: loss 0.000385
+ending training at step 13129: loss 0.000100
+Optimizing embedding for 'p'
+step     0: loss 5.491922
+step  5000: loss 0.004592
+step 10000: loss 0.000334
+ending training at step 12591: loss 0.000100
+Optimizing embedding for 'q'
+step     0: loss 7.071236
+step  5000: loss 0.009648
+step 10000: loss 0.000780
+ending training at step 14544: loss 0.000100
+Optimizing embedding for 'r'
+step     0: loss 4.199371
+step  5000: loss 0.003764
+step 10000: loss 0.000269
+ending training at step 12097: loss 0.000100
+Optimizing embedding for 's'
+step     0: loss 3.382303
+step  5000: loss 0.003826
+step 10000: loss 0.000292
+ending training at step 12371: loss 0.000100
+Optimizing embedding for 't'
+step     0: loss 3.480482
+step  5000: loss 0.002713
+step 10000: loss 0.000215
+ending training at step 11708: loss 0.000100
+Optimizing embedding for 'u'
+step     0: loss 4.638258
+step  5000: loss 0.004020
+step 10000: loss 0.000304
+ending training at step 12410: loss 0.000100
+Optimizing embedding for 'v'
+step     0: loss 5.588468
+step  5000: loss 0.005722
+step 10000: loss 0.000431
+ending training at step 13151: loss 0.000100
+Optimizing embedding for 'w'
+step     0: loss 5.171694
+step  5000: loss 0.005444
+step 10000: loss 0.000419
+ending training at step 13169: loss 0.000100
+Optimizing embedding for 'x'
+step     0: loss 7.298410
+step  5000: loss 0.006922
+step 10000: loss 0.000575
+ending training at step 13903: loss 0.000100
+Optimizing embedding for 'y'
+step     0: loss 4.950903
+step  5000: loss 0.004004
+step 10000: loss 0.000316
+ending training at step 12507: loss 0.000100
+Optimizing embedding for 'z'
+step     0: loss 7.318987
+step  5000: loss 0.005466
+step 10000: loss 0.000425
+ending training at step 13100: loss 0.000100</code></pre>
+</div>
+</div>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script type="application/vnd.jupyter.widget-state+json">
+{"state":{},"version_major":2,"version_minor":0}
+</script>
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/spather/transformer-experiments/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>
